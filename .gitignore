@@ -1,5 +1,35 @@
+# Private working notes. This repository is public: design plans, client feedback and decisions stay on disk only.
+.design_notes/
+
+# Scratch space: one-off scripts, experiments, local backups
 scratch/
+
+# Generated output (tools/build-compare.mjs, tools/shoot.mjs)
+dist/
+shots/
+
+# Dependencies. The site has none; this covers tooling installed locally.
+node_modules/
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Logs and temporary files
+*.log
+*.tmp
+*.bak
+*.swp
+*~
+
+# Operating system
 .DS_Store
 Thumbs.db
-.env
-dist/
+desktop.ini
+
+# Editors and AI assistants: local settings and session data
+.vscode/
+.idea/
+*.code-workspace
+.claude/
