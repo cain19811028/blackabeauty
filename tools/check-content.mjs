@@ -1,4 +1,4 @@
-// Original copy and shop details must survive verbatim (plan §7, §9.1): node tools/check-content.mjs [page]
+// Original copy and shop details must survive verbatim: node tools/check-content.mjs [page]
 // Every string below is copied from the original site (identical to the live HiNet pages as of 2026-10-03).
 // Layout may change; the characters may not. Exits 1 and lists every missing item.
 import { readFileSync } from 'node:fs';
@@ -23,7 +23,7 @@ const mapUrls = [...html.matchAll(/\b(?:src|href)="([^"]*google\.com\/maps[^"]*)
 });
 
 // Structured data for search engines. Since 2026-11-13 the 官網／奇摩拍賣／Blogger links live only here:
-// the client asked for them to be removed from the page (plan_20261113 §3, decision 8).
+// they were removed from the page.
 const ldMatch = html.match(/<script type="application\/ld\+json">([\s\S]*?)<\/script>/);
 const ld = ldMatch ? JSON.parse(ldMatch[1]) : {};
 const sameAs = Array.isArray(ld.sameAs) ? ld.sameAs : [];
@@ -52,7 +52,7 @@ const checks = [
   ['Blogger（結構化資料）', () => sameAs.includes('http://blackabeauty999.blogspot.tw/')],
   ['導航連結指向新址', () => mapUrls.length > 0 && mapUrls.every((u) => u.includes('鼎貴路62巷14號'))],
   ['沒有任何舊址（鼎信街）', () => !text.includes('鼎信街') && !mapUrls.some((u) => u.includes('鼎信街'))],
-  // 關於我們 (about.html; the Big5 emphasis marks are restored as 「」, plan §7.2)
+  // 關於我們 (about.html; the Big5 emphasis marks are restored as 「」)
   ['關於：機關團體', () => text.includes('歡迎機關、團體「訂購、出租」')],
   ['關於：專營', () => text.includes('本公司專營國內外各大學之博士、碩士、學士服')],
   ['關於：個人訂製', () => text.includes('接受「個人訂製」國內外博士服、碩士服')],
@@ -65,7 +65,7 @@ const checks = [
   ['規格：博士服', () => /1\.博士服含披、帽1套/.test(text)],
   ['規格：碩士服', () => /2\.碩士服含披、帽1套來電詢問提供出租/.test(text)],
   ['規格：學士服', () => /3\.學士服中西式1套/.test(text)],
-  // 相關產品 (other.html; the 、 after 襯衫 replaces the original line break, plan §7.6)
+  // 相關產品 (other.html; the 、 after 襯衫 replaces the original line break)
   ['相關產品', () => text.includes('相關產品有運動服、團體服、學生制服、夾克、襯衫、合唱服、舞蹈服、帽子、休閒服、鳳仙裝、廣告背心、餐飲廚服、醫生袍、護士服、祭典禮服...等。歡迎來電詢問～！')],
 ];
 

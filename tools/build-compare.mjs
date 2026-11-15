@@ -1,4 +1,4 @@
-// A/B comparison pack (plan_20261113 §7): node tools/build-compare.mjs [--a=<git ref>] [--out=dist/compare]
+// A/B comparison pack: node tools/build-compare.mjs [--a=<git ref>] [--out=dist/compare]
 // A is exported straight from git objects (default: tag v1-sakura), so it can never drift from what was approved.
 // B is the working tree as it is right now, uncommitted changes included.
 // The pack opens by double-clicking dist/compare/index.html; no server needed.
@@ -19,8 +19,8 @@ if (!rel || rel.startsWith('..') || isAbsolute(rel)) {
   throw new Error(`--out must be a folder inside dist/, got ${out}`);
 }
 
-// Only what index.html loads. The old shop photos are reference material, never shown on the new site
-// (plan_20261003 素材原則); jQuery and remove.js belong to the old HiNet pages.
+// Only what index.html loads. The old shop photos are reference material, never shown on the new site;
+// jQuery and remove.js belong to the old HiNet pages.
 const isSiteFile = (path) =>
   path === 'index.html' ||
   (/^(css|js|images)\//.test(path) &&
@@ -63,7 +63,7 @@ function exportWorkingTree(dest) {
   }
 }
 
-// A version with a missing stylesheet or script would look broken in front of the client, so fail the build instead.
+// A version with a missing stylesheet or script would look broken in a demo, so fail the build instead.
 function checkAssets(dir, name) {
   const html = readFileSync(join(dir, 'index.html'), 'utf8');
   const missing = [...html.matchAll(/\b(?:src|href)="([^"#?]+)/g)]

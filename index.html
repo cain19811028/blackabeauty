@@ -235,7 +235,7 @@
         <use href="#k-neck"/><use href="#k-sleeves-dr"/><use href="#k-body"/><use href="#k-yoke"/><use href="#k-facings"/>
       </symbol>
 
-      <!-- Dress form (人台) the gowns are shown on (plan_20261113 decision 7), in the gowns' 400-wide frame: a linen neck
+      <!-- Dress form (人台) the gowns are shown on, in the gowns' 400-wide frame: a linen neck
            rising out of the collar under a turned-wood cap (the mortarboard sits on it), a walnut pole and tripod below the hem. -->
       <g id="k-form-neck">
         <path d="M178 238 L178 160 C186 156 214 156 222 160 L222 238 Z" fill="#E8DCC7" stroke="#B9A88C" stroke-width="1.5"/>
@@ -262,7 +262,7 @@
       </filter>
       <filter id="k-soft" x="-20%" y="-300%" width="140%" height="700%"><feGaussianBlur stdDeviation="9"/></filter>
 
-      <!-- Satin sheen (plan_20261113 §4.1): a gown masks its own light band with a solid white silhouette of itself. -->
+      <!-- Satin sheen: a gown masks its own light band with a solid white silhouette of itself. -->
       <filter id="k-silhouette" x="-5%" y="-5%" width="110%" height="110%" color-interpolation-filters="sRGB">
         <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
       </filter>
@@ -475,7 +475,7 @@
 
   <main>
     <section class="hero" id="top" aria-labelledby="hero-title">
-      <!-- Depth layers, far to near (plan_20261113 §4.1, kapok-lawn revision): sky, sun, a few clouds, campus on green hills,
+      <!-- Depth layers, far to near (kapok-lawn revision): sky, sun, a few clouds, campus on green hills,
            lawn, [back petals], copy and dress forms, torn-paper edge, kapok branch, [front petals]. motion.js moves each at its own rate. -->
       <div class="hero__sky" aria-hidden="true">
         <div class="sunlight">
@@ -513,7 +513,7 @@
             </g></g>
           </g>
         </svg>
-        <!-- Campus on green hills (2026-11-14: the client wanted ground, not a cloud sea). Atmospheric, so pale. -->
+        <!-- Campus on green hills. Atmospheric, so pale. -->
         <svg class="campus" viewBox="0 0 1440 320" preserveAspectRatio="xMidYMax slice">
           <path d="M0 214 C140 182 260 196 380 176 C520 152 640 190 760 182 C900 172 1000 150 1140 170 C1260 186 1360 168 1440 176 L1440 320 L0 320 Z" fill="#D4E6C2"/>
           <path d="M0 252 C160 232 300 246 440 236 C600 224 720 248 880 240 C1040 232 1180 246 1300 238 C1360 234 1410 238 1440 242 L1440 320 L0 320 Z" fill="#C2DCAC"/>
@@ -564,7 +564,7 @@
         </div>
 
         <div class="hero__stage">
-          <!-- Gowns on dress forms standing on the lawn (2026-11-14: empty gowns floating among clouds read as ill-omened).
+          <!-- Gowns on dress forms standing on the lawn.
                Each unit is its own layer so the pointer can set them at different depths without repainting the grain. -->
           <div class="rig" role="img" aria-label="學士服、碩士服、博士服，穿在人台上立於草地">
             <div class="rig__glow"></div>
@@ -1076,7 +1076,7 @@
           <p class="section-head__en" lang="en">Contact</p>
           <h2 id="contact-title">聯絡我們</h2>
         </header>
-        <!-- 2026-11-13: the client kept only the details; map, link cards and buttons removed. The address opens directions. -->
+        <!-- Details only: no map, link cards or buttons. The address opens directions. -->
         <div class="contact__card" data-reveal>
           <p class="contact__company">黑美人服飾開發有限公司<span lang="en">Black A Beauty</span></p>
           <dl class="contact__list">

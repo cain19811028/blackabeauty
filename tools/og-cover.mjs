@@ -1,4 +1,4 @@
-// Share preview (plan §8.3): renders the settled hero at 1200×630 into images/og/og-cover.png.
+// Share preview: renders the settled hero at 1200×630 into images/og/og-cover.png.
 // LINE and Facebook do not render SVG previews, so this must be a PNG. Re-run whenever the hero changes.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Layering (plan §4.2): sky 0 → back petals 1 → content 2 → torn-paper edge, branch 3 → near petals 4 → paper grain 5 → chrome 10.
+   Layering: sky 0 → back petals 1 → content 2 → torn-paper edge, branch 3 → near petals 4 → paper grain 5 → chrome 10.
    Nothing between <body> and these layers may create a stacking context.
    ========================================================================== */
 .petals {
@@ -114,7 +114,7 @@
   z-index: 0;
   background: linear-gradient(180deg, var(--sky-top) 0%, var(--sky-mid) 40%, var(--sky-haze) 74%, var(--paper) 100%);
 }
-/* Layers motion.js moves (plan_20261113 §4.1). Each gets its own compositor layer, so moving one never repaints its art. */
+/* Layers motion.js moves. Each gets its own compositor layer, so moving one never repaints its art. */
 .sunlight, .rays, .clouds, .campus, .lawn, .paper, .rig, .rig__glow, .gown, .gown__sheen, .hero__copy, .hero__vertical, .hero__branch {
   will-change: transform;
 }
@@ -371,7 +371,7 @@
   animation: cue-fall 2.4s var(--ease-in-out) infinite;
 }
 
-/* opening choreography (plan §4.1) — content is readable from the first paint */
+/* opening choreography — content is readable from the first paint */
 .js .hero__title .ch {
   display: inline-block;
   animation: ch-in .95s var(--ease-out) both;
@@ -666,7 +666,7 @@
 
 /* ---------- contact ---------- */
 .contact { position: relative; padding: clamp(64px, 9vw, 120px) 0 clamp(88px, 11vw, 140px); }
-/* Since 2026-11-13 only the details remain (client's call), so the card is a single centred column, like a name card. */
+/* Only the details remain, so the card is a single centred column, like a name card. */
 .contact__card {
   max-width: 620px;
   margin-inline: auto;

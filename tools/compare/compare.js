@@ -1,4 +1,4 @@
-/* Compare page (plan_20261113 §7): lays out A and B, keeps them on the same section, replays the opening together.
+/* Compare page: lays out A and B, keeps them on the same section, replays the opening together.
    Talks to bridge.js inside each version by postMessage. */
 (function () {
   'use strict';

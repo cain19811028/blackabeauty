@@ -1,4 +1,4 @@
-/* Falling kapok (木棉) petals, and now and then a whole flower (plan_20261113 decision 6).
+/* Falling kapok (木棉) petals, and now and then a whole flower.
    Two fixed canvases: far/mid petals behind the content, a few near ones in front.
    Petals are pre-rendered sprites; each frame only transforms and blits them. */
 (function () {
@@ -281,7 +281,7 @@
     BAB.ticker.add(step);
   }
 
-  // The opening gust (plan §4.1, t ≈ 1.0 s): a wide sweep of petals from the left.
+  // The opening gust (t ≈ 1.0 s): a wide sweep of petals from the left.
   function openingGust() {
     if (BAB.reducedMotion || !backCtx) return;
     sweep(Math.round(baseCount * 0.4));

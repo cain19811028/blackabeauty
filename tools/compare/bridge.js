@@ -1,4 +1,4 @@
-/* Compare bridge (plan_20261113 §7). tools/build-compare.mjs injects this into both exported versions.
+/* Compare bridge. tools/build-compare.mjs injects this into both exported versions.
    Position travels as "section + fraction" because the two versions differ in length, and over postMessage
    because pages opened from file:// are cross-origin to each other. It never touches the page's look. */
 (function () {

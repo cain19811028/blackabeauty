@@ -1,4 +1,4 @@
-// Screenshot QA (plan §9.3): node tools/shoot.mjs <page> <outDir> [--at=ms,ms] [--full] [--reduced]
+// Screenshot QA: node tools/shoot.mjs <page> <outDir> [--at=ms,ms] [--full] [--reduced]
 // Captures desktop (1440×900) and phone (375×812 @2x) at each moment, in real time, and prints page errors.
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { resolve, join } from 'node:path';

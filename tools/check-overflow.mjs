@@ -1,4 +1,4 @@
-// No horizontal scrolling at any breakpoint (plan §9.2): node tools/check-overflow.mjs [page]
+// No horizontal scrolling at any breakpoint: node tools/check-overflow.mjs [page]
 // Exits 1 and names the widest offending elements when document width exceeds the viewport.
 import { resolve } from 'node:path';
 import { pathToFileURL } from 'node:url';

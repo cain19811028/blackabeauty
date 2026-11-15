@@ -1,4 +1,4 @@
-/* Opening choreography, cap flight, tassel springs, parallax and scroll reveals (plan §4.1, §4.3). */
+/* Opening choreography, cap flight, tassel springs, parallax and scroll reveals. */
 (function () {
   'use strict';
 
@@ -129,7 +129,7 @@
   };
   const f2 = (v) => v.toFixed(2);
 
-  // Hero depth (plan_20261113 §4.1). The pointer moves near layers with the cursor and far ones against it, and
+  // Hero depth. The pointer moves near layers with the cursor and far ones against it, and
   // tilts the gown stage; scrolling pushes the camera forward across the lawn: the branch sweeps past, the ground
   // rushes in and a torn sheet of paper rises over the scene into 關於我們. Only transform and opacity change.
   function initDepth(hero) {
@@ -154,7 +154,7 @@
     measure();
 
     // [selector, transform(x, y, p), kept on phones]. x, y: smoothed pointer in -1…1; p: hero scroll progress 0…1.
-    // Phones keep the four layers that tell the scroll story (plan_20261113 §5 budget).
+    // Phones keep the four layers that tell the scroll story.
     const spec = [
       ['.sunlight', (x, y, p) => `translate3d(${f2(x * -4)}px, ${f2(y * -3 + p * H * 0.35)}px, 0) scale(${f2(1 + p * 0.1)})`],
       ['.rays', (x, y, p) => `rotate(${f2(p * 12 + x * 2)}deg)`],
