@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="zh-Hant-TW">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>2.5D 手繪原型｜黑美人服飾</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@900&family=Pinyon+Script&display=swap">
+  <style>
+    /* Prototype only (plan: 2.5D hand-drawn direction). Colours mirror css/tokens.css so it reads like the real hero. */
+    :root {
+      --paper: #FFFDF9;
+      --ink: #26232B;
+      --ink-soft: #5B5563;
+      --line: #EADFD6;
+      --bloom-200: #F9CDB8;
+      --bloom-600: #C0532C;
+      --shu: #CC3B2B;
+    }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; }
+    body {
+      background: var(--paper);
+      color: var(--ink);
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+    /* the page is taller than the screen only so scrolling can drive the camera */
+    .scroll-space { height: 240vh; }
+
+    .sky, #scene { position: fixed; inset: 0; width: 100%; height: 100%; }
+    .sky {
+      background:
+        radial-gradient(circle at 78% 4%, rgba(255, 255, 255, .95) 0, rgba(255, 251, 238, .7) 9%, rgba(255, 243, 226, .25) 22%, rgba(255, 243, 226, 0) 38%),
+        linear-gradient(180deg, #7EC3F0 0%, #BDE3FA 36%, #FFF1EC 58%, #F3F1E2 100%);
+    }
+    #scene { display: block; touch-action: pan-y; }
+
+    .copy {
+      position: fixed;
+      left: max(24px, calc((100vw - 1200px) / 2));
+      top: 19vh;
+      width: min(44vw, 540px);
+      pointer-events: none;
+      transition: opacity .4s;
+    }
+    .copy__script { margin: 0 0 -.1em; font-family: "Pinyon Script", cursive; font-size: clamp(1.2rem, 2.6vw, 2.4rem); color: var(--bloom-600); transform: rotate(-4deg); transform-origin: left center; white-space: nowrap; }
+    .copy h1 { margin: 0; font-family: "Noto Serif TC", serif; font-weight: 900; font-size: clamp(1.9rem, 4.4vw, 3.9rem); line-height: 1.24; letter-spacing: .04em; text-shadow: 0 2px 28px rgba(255, 255, 255, .6); }
+    /* word groups stay whole, so a line never ends on an orphan */
+    .copy h1 span, .copy p.lead span { white-space: nowrap; }
+    .copy h1 mark { background: linear-gradient(transparent 62%, var(--bloom-200) 62%, var(--bloom-200) 94%, transparent 94%); color: inherit; }
+    .copy p.lead { margin: 1.2em 0 0; font-weight: 500; letter-spacing: .06em; color: var(--ink-soft); text-shadow: 0 1px 12px rgba(255, 255, 255, .7); }
+
+    .hud {
+      position: fixed;
+      left: 16px;
+      bottom: 16px;
+      z-index: 5;
+      width: min(340px, calc(100vw - 32px));
+      padding: 14px 16px;
+      border-radius: 16px;
+      background: rgba(255, 253, 249, .92);
+      box-shadow: 0 18px 40px -22px rgba(70, 40, 60, .55), 0 0 0 1px var(--line);
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .hud h2 { margin: 0 0 2px; font: 900 15px/1.4 "Noto Serif TC", serif; letter-spacing: .1em; }
+    .hud p { margin: 0 0 8px; color: var(--ink-soft); }
+    .hud__row { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 8px; }
+    .hud label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
+    .hud button {
+      padding: 6px 12px;
+      border: 0;
+      border-radius: 999px;
+      background: var(--ink);
+      color: var(--paper);
+      font: inherit;
+      font-weight: 500;
+      cursor: pointer;
+    }
+    .hud button[aria-pressed="true"] { background: var(--shu); }
+    .hud button:focus-visible, .hud input:focus-visible { outline: 2.5px solid var(--bloom-600); outline-offset: 2px; }
+    .hud__fps { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
+
+    /* sharpness check: the same gown as live vector SVG (how the site draws it today) beside the three.js texture */
+    .compare { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
+    .compare[hidden] { display: none; }
+    .compare__vector { position: absolute; overflow: visible; }
+    .compare__tag {
+      position: absolute;
+      transform: translate(-50%, -100%);
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(38, 35, 43, .88);
+      color: var(--paper);
+      font-size: 13px;
+      white-space: nowrap;
+    }
+
+    .no-webgl .hud p::after { content: "（這個瀏覽器無法啟用 WebGL，看不到場景）"; color: var(--shu); }
+    @media (max-width: 767px) {
+      .copy { top: 12vh; width: calc(100vw - 48px); }
+      .hud { font-size: 12px; }
+    }
+  </style>
+</head>
+<body>
+  <div class="sky" aria-hidden="true"></div>
+  <canvas id="scene" aria-label="2.5D 場景：草坪上三件穿在人台上的學位服"></canvas>
+
+  <div class="copy" id="copy">
+    <p class="copy__script" lang="en">Congratulations on your graduation</p>
+    <h1><span>這一天的你，</span><br><span>值得一件<mark>好禮服</mark>。</span></h1>
+    <p class="lead"><span>本公司專營</span><span>國內外各大學之</span><span>博士、碩士、學士服</span></p>
+  </div>
+
+  <aside class="hud" aria-label="原型控制">
+    <h2>2.5D 手繪原型</h2>
+    <p>移動滑鼠看景深，滑過草地會撥開草；往下捲，鏡頭往前推。</p>
+    <div class="hud__row">
+      <label><input type="checkbox" id="t-sway" checked>布料擺動</label>
+      <label><input type="checkbox" id="t-grass" checked>草坪</label>
+      <label><input type="checkbox" id="t-dof" checked>景深模糊</label>
+      <label><input type="checkbox" id="t-petals" checked>花瓣</label>
+    </div>
+    <div class="hud__row">
+      <button type="button" id="b-gust">起風</button>
+      <button type="button" id="b-toss">再拋一次方帽</button>
+      <button type="button" id="b-compare" aria-pressed="false">銳利度比對</button>
+    </div>
+    <span class="hud__fps" id="fps"></span>
+  </aside>
+
+  <div class="compare" id="compare" hidden>
+    <div class="compare__vector" id="compare-vector"></div>
+    <span class="compare__tag" id="tag-vector">向量原圖（網站現在的畫法）</span>
+    <span class="compare__tag" id="tag-webgl">three.js 貼圖</span>
+  </div>
+
+  <div class="scroll-space"></div>
+
+  <script src="vendor/three.min.js"></script>
+  <script src="art.js"></script>
+  <script src="proto.js"></script>
+</body>
+</html>
