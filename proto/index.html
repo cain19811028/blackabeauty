@@ -2,144 +2,1784 @@
 <html lang="zh-Hant-TW">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="robots" content="noindex, nofollow">
-  <title>2.5D 手繪原型｜黑美人服飾</title>
+  <title>2.5D 全站動態原型（進階版）｜黑美人服飾</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@900&family=Pinyon+Script&display=swap">
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;1,500&family=Noto+Sans+TC:wght@400;500;700&family=Noto+Serif+TC:wght@600;900&family=Pinyon+Script&display=swap">
   <style>
-    /* Prototype only (plan: 2.5D hand-drawn direction). Colours mirror css/tokens.css so it reads like the real hero. */
+    /* Advanced 2.5D prototype (per .design_notes/plan_20261115.md):
+       Demonstrates the full scroll choreography from the 2.5D Three.js Hero through the torn-paper edge
+       into the original 關於我們 illustration, the 2.5D 學位服展廳, and the editorial sections below. */
     :root {
       --paper: #FFFDF9;
+      --paper-warm: #FBF3EC;
       --ink: #26232B;
       --ink-soft: #5B5563;
+      --ink-mute: #6F6876;
       --line: #EADFD6;
+      --sky-top: #7EC3F0;
+      --sky-mid: #BDE3FA;
+      --sky-haze: #FFF1EC;
+      --bloom-50: #FFF1EA;
       --bloom-200: #F9CDB8;
+      --bloom-400: #EE8B62;
       --bloom-600: #C0532C;
       --shu: #CC3B2B;
+      --shu-deep: #A52C20;
+      --gold: #B8913F;
+      --font-serif: "Noto Serif TC", "Songti TC", "PMingLiU", serif;
+      --font-sans: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      --font-latin: "Cormorant Garamond", "Times New Roman", serif;
+      --font-script: "Pinyon Script", cursive;
+      --ease-out: cubic-bezier(.16, 1, .3, 1);
+      --ease-in-out: cubic-bezier(.65, 0, .35, 1);
+      --maxw: 1200px;
+      --gutter: clamp(16px, 4vw, 48px);
+      --header-h: 72px;
+      --radius: 20px;
+      --shadow-soft: 0 24px 60px -30px rgba(70, 40, 60, .38);
+      --bloom-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='-36 -36 72 72'%3E%3Cg id='p'%3E%3Cpath d='M0 0 C-10 -6 -17 -18 -14 -28 C-11 -35 -3 -36 0 -35 C3 -36 11 -35 14 -28 C17 -18 10 -6 0 0Z'/%3E%3C/g%3E%3Cuse href='%23p' transform='rotate(72)'/%3E%3Cuse href='%23p' transform='rotate(144)'/%3E%3Cuse href='%23p' transform='rotate(216)'/%3E%3Cuse href='%23p' transform='rotate(288)'/%3E%3C/svg%3E");
     }
+
+    /* Gown colourway CSS variables for inline SVG illustrations (from css/tokens.css) */
+    .cw-black { --fabric: #2A2D3B; --fabric-shade: #1C1E29; --fabric-deep: #111219; --fabric-hi: #474D63; --fabric-line: #0D0E14; }
+    .cw-crimson { --fabric: #A61C2E; --fabric-shade: #7F1121; --fabric-deep: #4E0812; --fabric-hi: #CF4456; --fabric-line: #3E0610; --velvet: #1F202C; --velvet-shade: #14151D; --velvet-hi: #43475F; }
+    .trim-silver { --trim: #C9CED6; --trim-shade: #9AA1AD; --trim-hi: #F7F9FB; --trim-line: #7D8492; }
+    .trim-gold { --trim: #E0AE2A; --trim-shade: #AE7E12; --trim-hi: #FFE79A; --trim-line: #7A560A; }
+    .trim-blue { --trim: #2A69CE; --trim-shade: #1D4C9C; --trim-hi: #8FC4FF; --trim-line: #153A78; }
+    .trim-orange { --trim: #E04E19; --trim-shade: #A83510; --trim-hi: #FFAA7A; --trim-line: #7E260A; }
+    .trim-purple { --trim: #6B4DAA; --trim-shade: #4C3480; --trim-hi: #B79DEB; --trim-line: #382360; }
+
     *, *::before, *::after { box-sizing: border-box; }
+    html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
     html, body { margin: 0; }
     body {
       background: var(--paper);
       color: var(--ink);
-      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      font-family: var(--font-sans);
+      font-size: 1rem;
+      line-height: 1.75;
       -webkit-font-smoothing: antialiased;
+      text-rendering: optimizeLegibility;
+      overflow-x: clip;
     }
-    /* the page is taller than the screen only so scrolling can drive the camera */
-    .scroll-space { height: 240vh; }
 
-    .sky, #scene { position: fixed; inset: 0; width: 100%; height: 100%; }
+    /* Fixed washi paper grain over the entire viewport so the 2.5D hero and paper sections read as one printed world. */
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: 8;
+      pointer-events: none;
+      opacity: .48;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='3' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .42 0 0 0 0 .34 0 0 0 0 .3 0 0 0 .07 0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+    }
+
+    img, svg { display: block; max-width: 100%; }
+    h1, h2, h3, p, ul, ol, dl, dd, figure { margin: 0; }
+    ul, ol { padding: 0; list-style: none; }
+    a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .2em; }
+    a:focus-visible, button:focus-visible, input:focus-visible {
+      outline: 2.5px solid var(--bloom-600);
+      outline-offset: 2px;
+      border-radius: 6px;
+    }
+
+    .container {
+      position: relative;
+      z-index: 2;
+      width: min(100% - 2 * var(--gutter), var(--maxw));
+      margin-inline: auto;
+    }
+    .nw { white-space: nowrap; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      margin: -1px;
+      overflow: hidden;
+      clip-path: inset(50%);
+      white-space: nowrap;
+    }
+    .icon {
+      width: 1.15em;
+      height: 1.15em;
+      flex: none;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 1.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: .55em;
+      min-height: 46px;
+      padding: .65em 1.3em;
+      border-radius: 999px;
+      font-weight: 700;
+      font-size: .96rem;
+      letter-spacing: .06em;
+      text-decoration: none;
+      border: 0;
+      cursor: pointer;
+      font-family: inherit;
+      transition: transform .25s var(--ease-out), box-shadow .25s var(--ease-out), background-color .25s;
+    }
+    .btn:hover { transform: translateY(-2px); }
+    .btn--primary {
+      background: var(--ink);
+      color: var(--paper);
+      box-shadow: 0 14px 30px -14px rgba(38, 35, 43, .7);
+    }
+    .btn--ghost {
+      background: rgba(255, 253, 249, .78);
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1.5px rgba(38, 35, 43, .18);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+    }
+    .btn--ghost:hover { background: var(--paper); }
+
+    /* ---------- Site Header ---------- */
+    .site-header {
+      position: fixed;
+      inset: 0 0 auto;
+      z-index: 20;
+      height: var(--header-h);
+      transition: background-color .35s, box-shadow .35s, backdrop-filter .35s;
+    }
+    .site-header.is-scrolled {
+      background: rgba(255, 253, 249, .88);
+      box-shadow: 0 1px 0 var(--line);
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+    }
+    .site-header__bar {
+      display: flex;
+      align-items: center;
+      gap: 24px;
+      height: 100%;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-decoration: none;
+      margin-right: auto;
+    }
+    .brand__seal {
+      writing-mode: vertical-rl;
+      padding: 7px 5px;
+      border-radius: 5px;
+      background: var(--shu);
+      color: #FFF6EE;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: 13px;
+      line-height: 1.05;
+      letter-spacing: .08em;
+      box-shadow: inset 0 0 0 1.5px rgba(255, 246, 238, .45);
+      transform: rotate(-3deg);
+    }
+    .brand__text { display: grid; line-height: 1.25; }
+    .brand__text strong {
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: 1.02rem;
+      letter-spacing: .12em;
+    }
+    .brand__text em {
+      font-family: var(--font-latin);
+      font-style: italic;
+      font-size: .95rem;
+      color: var(--ink-soft);
+      letter-spacing: .06em;
+    }
+    .site-nav { display: flex; gap: 24px; }
+    .site-nav a {
+      font-weight: 500;
+      letter-spacing: .12em;
+      text-decoration: none;
+      padding: 6px 0;
+      background: linear-gradient(var(--bloom-400), var(--bloom-400)) no-repeat 0 100% / 0 2px;
+      transition: background-size .3s var(--ease-out), color .25s;
+    }
+    .site-nav a:hover, .site-nav a.is-active { background-size: 100% 2px; color: var(--bloom-600); }
+    .header-call { min-height: 42px; padding: .45em 1.1em; font-size: .92rem; }
+    .menu-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 44px;
+      height: 44px;
+      padding: 0;
+      border: 0;
+      border-radius: 50%;
+      background: rgba(255, 253, 249, .78);
+      box-shadow: inset 0 0 0 1.5px rgba(38, 35, 43, .15);
+      color: var(--ink);
+      cursor: pointer;
+    }
+
+    /* ---------- Hero 2.5D Scroll Track ---------- */
+    .hero-track {
+      position: relative;
+      z-index: 2;
+      height: 235vh;
+    }
+    .hero-sticky {
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      height: 100svh;
+      overflow: hidden;
+    }
+    .sky, #hero-scene {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+    }
     .sky {
       background:
         radial-gradient(circle at 78% 4%, rgba(255, 255, 255, .95) 0, rgba(255, 251, 238, .7) 9%, rgba(255, 243, 226, .25) 22%, rgba(255, 243, 226, 0) 38%),
         linear-gradient(180deg, #7EC3F0 0%, #BDE3FA 36%, #FFF1EC 58%, #F3F1E2 100%);
     }
-    #scene { display: block; touch-action: pan-y; }
-
-    .copy {
-      position: fixed;
-      left: max(24px, calc((100vw - 1200px) / 2));
-      top: 19vh;
-      width: min(44vw, 540px);
-      pointer-events: none;
-      transition: opacity .4s;
+    .sunlight { position: absolute; inset: 0; pointer-events: none; }
+    .sun, .rays {
+      position: absolute;
+      top: -22%;
+      right: 4%;
+      width: min(70vw, 760px);
+      aspect-ratio: 1;
     }
-    .copy__script { margin: 0 0 -.1em; font-family: "Pinyon Script", cursive; font-size: clamp(1.2rem, 2.6vw, 2.4rem); color: var(--bloom-600); transform: rotate(-4deg); transform-origin: left center; white-space: nowrap; }
-    .copy h1 { margin: 0; font-family: "Noto Serif TC", serif; font-weight: 900; font-size: clamp(1.9rem, 4.4vw, 3.9rem); line-height: 1.24; letter-spacing: .04em; text-shadow: 0 2px 28px rgba(255, 255, 255, .6); }
-    /* word groups stay whole, so a line never ends on an orphan */
-    .copy h1 span, .copy p.lead span { white-space: nowrap; }
-    .copy h1 mark { background: linear-gradient(transparent 62%, var(--bloom-200) 62%, var(--bloom-200) 94%, transparent 94%); color: inherit; }
-    .copy p.lead { margin: 1.2em 0 0; font-weight: 500; letter-spacing: .06em; color: var(--ink-soft); text-shadow: 0 1px 12px rgba(255, 255, 255, .7); }
+    .sun {
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(255, 255, 255, .92) 0%, rgba(255, 251, 238, .66) 18%, rgba(255, 243, 226, .22) 40%, rgba(255, 243, 226, 0) 68%);
+      animation: sun-breathe 9s var(--ease-in-out) infinite alternate;
+    }
+    .rays { transform-origin: 50% 50%; mix-blend-mode: screen; }
+    .rays i {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      width: 150vmax;
+      height: var(--w);
+      margin-top: calc(var(--w) / -2);
+      transform-origin: 0 50%;
+      rotate: var(--a);
+      background: linear-gradient(90deg, rgba(255, 252, 242, .56), rgba(255, 252, 242, .2) 34%, rgba(255, 252, 242, 0) 72%);
+      -webkit-mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+      mask-image: linear-gradient(transparent, #000 32%, #000 68%, transparent);
+    }
+    #hero-scene { display: block; touch-action: pan-y; }
 
+    .hero__vertical {
+      position: absolute;
+      top: 17%;
+      left: max(12px, calc((100vw - var(--maxw)) / 2 - 56px));
+      z-index: 3;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      writing-mode: vertical-rl;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: .85rem;
+      letter-spacing: .5em;
+      color: var(--ink-soft);
+      pointer-events: none;
+    }
+    .hero__vertical::before {
+      content: "";
+      width: 1px;
+      height: 48px;
+      background: linear-gradient(transparent, rgba(38, 35, 43, .35));
+    }
+
+    .hero__copy {
+      position: absolute;
+      left: max(24px, calc((100vw - 1200px) / 2));
+      top: 17vh;
+      z-index: 3;
+      width: min(44vw, 540px);
+      will-change: transform, opacity;
+    }
+    .hero__script {
+      margin: 0 0 -.1em;
+      font-family: var(--font-script);
+      font-size: clamp(1.2rem, 2.5vw, 2.35rem);
+      color: var(--bloom-600);
+      transform: rotate(-4deg);
+      transform-origin: left center;
+      white-space: nowrap;
+    }
+    .hero__heading { position: relative; display: inline-block; }
+    .hero__copy h1 {
+      margin: 0;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(1.9rem, 4.3vw, 3.85rem);
+      line-height: 1.24;
+      letter-spacing: .04em;
+      text-shadow: 0 2px 28px rgba(255, 255, 255, .65);
+    }
+    .hero__copy h1 mark {
+      background: linear-gradient(transparent 62%, var(--bloom-200) 62%, var(--bloom-200) 94%, transparent 94%);
+      color: inherit;
+    }
+    .hero__badge {
+      --size: clamp(72px, 7.6vw, 98px);
+      --r: -10deg;
+      position: absolute;
+      right: clamp(-74px, -5.2vw, -24px);
+      bottom: calc(var(--size) * -.64);
+      display: grid;
+      place-content: center;
+      width: var(--size);
+      aspect-ratio: 1;
+      border-radius: 50%;
+      border: 2.5px solid var(--shu);
+      box-shadow: inset 0 0 0 4px var(--paper), inset 0 0 0 5.5px var(--shu);
+      background: rgba(255, 253, 249, .92);
+      color: var(--shu);
+      text-align: center;
+      font-family: var(--font-serif);
+      line-height: 1.15;
+      transform: rotate(var(--r));
+    }
+    .hero__badge b { font-size: calc(var(--size) * .24); font-weight: 900; letter-spacing: .06em; }
+    .hero__badge span { font-size: calc(var(--size) * .125); font-weight: 600; letter-spacing: .18em; }
+    .hero__lead {
+      margin: clamp(16px, 2.2vw, 26px) 0 clamp(20px, 2.6vw, 30px);
+      font-size: clamp(.98rem, .92rem + .35vw, 1.12rem);
+      font-weight: 500;
+      letter-spacing: .06em;
+      color: var(--ink-soft);
+      text-shadow: 0 1px 12px rgba(255, 255, 255, .75);
+    }
+    .hero__actions { display: flex; flex-wrap: wrap; gap: 12px; }
+
+    .scroll-cue {
+      position: absolute;
+      left: 50%;
+      bottom: 18px;
+      z-index: 5;
+      display: grid;
+      justify-items: center;
+      gap: 4px;
+      padding: 8px 14px 4px;
+      border-radius: 999px;
+      background: rgba(255, 253, 249, .82);
+      box-shadow: 0 10px 26px -12px rgba(38, 35, 43, .35), 0 0 0 1px var(--line);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      transform: translateX(-50%);
+      font-family: var(--font-latin);
+      font-style: italic;
+      font-size: .92rem;
+      letter-spacing: .2em;
+      color: var(--ink);
+      text-decoration: none;
+    }
+    .scroll-cue i {
+      position: relative;
+      width: 1px;
+      height: 30px;
+      background: rgba(38, 35, 43, .28);
+      overflow: hidden;
+    }
+    .scroll-cue i::after {
+      content: "";
+      position: absolute;
+      left: -4px;
+      top: -10px;
+      width: 9px;
+      height: 9px;
+      border-radius: 80% 0 80% 0;
+      background: var(--bloom-400);
+      animation: cue-fall 2.4s var(--ease-in-out) infinite;
+    }
+
+    /* ---------- Paper Flow (Rises over the 2.5D Hero via the torn washi deckle edge) ---------- */
+    .paper-flow {
+      position: relative;
+      z-index: 4;
+      margin-top: -100vh;
+      margin-top: -100svh;
+      background: var(--paper);
+    }
+    .torn-edge {
+      position: absolute;
+      left: 0;
+      right: 0;
+      top: -28px;
+      height: 30px;
+      pointer-events: none;
+      z-index: 3;
+      filter: drop-shadow(0 -10px 20px rgba(68, 46, 34, .16));
+    }
+    .torn-edge svg { width: 100%; height: 100%; display: block; }
+
+    /* Sticky back petals inside paper-flow: sits ABOVE paper background (z:1) and BEHIND sections (z:2) */
+    .petals-back {
+      position: sticky;
+      top: 0;
+      width: 100%;
+      height: 100vh;
+      height: 100svh;
+      margin-bottom: -100vh;
+      margin-bottom: -100svh;
+      z-index: 1;
+      pointer-events: none;
+      display: block;
+    }
+    .petals-front {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 6;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity .35s ease;
+    }
+
+    /* ---------- Editorial Section Headers (Upgraded per plan §4.3) ---------- */
+    .ed-head {
+      position: relative;
+      margin-bottom: clamp(28px, 4vw, 48px);
+    }
+    .ed-head--center { text-align: center; }
+    .ed-index {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      font-family: var(--font-latin);
+      font-size: .95rem;
+      letter-spacing: .16em;
+      color: var(--ink-mute);
+    }
+    .ed-index b {
+      font-weight: 600;
+      font-size: 1.2rem;
+      color: var(--bloom-600);
+    }
+    .ed-index i {
+      display: inline-block;
+      width: 38px;
+      height: 1px;
+      background: var(--line);
+    }
+    .ed-head__en {
+      font-family: var(--font-latin);
+      font-style: italic;
+      font-weight: 500;
+      font-size: clamp(1.1rem, 1rem + .6vw, 1.45rem);
+      color: var(--bloom-600);
+      letter-spacing: .08em;
+    }
+    .ed-head h2 {
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(2rem, 1.35rem + 2.4vw, 3.2rem);
+      letter-spacing: .12em;
+      line-height: 1.25;
+    }
+    .ed-head h2::after {
+      content: "";
+      display: block;
+      width: 58px;
+      height: 10px;
+      margin: 16px 0 0;
+      background: no-repeat center / contain url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 56 10'%3E%3Cpath d='M2 6 Q14 1 28 5 T54 4' fill='none' stroke='%23EE8B62' stroke-width='3' stroke-linecap='round'/%3E%3C/svg%3E");
+    }
+    .ed-head--center h2::after { margin-inline: auto; }
+
+    /* ---------- 01 關於我們 ---------- */
+    .about {
+      position: relative;
+      z-index: 2;
+      padding: calc(var(--header-h) + clamp(36px, 5vw, 72px)) 0 clamp(72px, 9vw, 128px);
+      overflow-x: clip;
+    }
+    .about__watermark {
+      position: absolute;
+      right: max(12px, 4vw);
+      top: calc(var(--header-h) + 12px);
+      z-index: 0;
+      writing-mode: vertical-rl;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(4.5rem, 8vw, 8.5rem);
+      letter-spacing: .2em;
+      color: transparent;
+      -webkit-text-stroke: 1.2px rgba(192, 83, 44, .13);
+      pointer-events: none;
+      user-select: none;
+    }
+    .about__inner {
+      display: grid;
+      grid-template-columns: minmax(0, 1.08fr) minmax(0, .95fr);
+      align-items: center;
+      gap: clamp(32px, 5vw, 84px);
+    }
+    .about__stage {
+      position: relative;
+      perspective: 1200px;
+    }
+    .about__art {
+      position: relative;
+      margin: 0;
+      transform-style: preserve-3d;
+      transition: transform .15s ease-out;
+    }
+    .about__svg { width: 100%; height: auto; overflow: visible; }
+    .about__vertical-note {
+      position: absolute;
+      left: -26px;
+      bottom: 24px;
+      writing-mode: vertical-rl;
+      font-family: var(--font-serif);
+      font-size: .8rem;
+      letter-spacing: .38em;
+      color: var(--ink-mute);
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .about__vertical-note::before {
+      content: "";
+      width: 1px;
+      height: 32px;
+      background: var(--line);
+    }
+    .pair-tassel { transform-box: view-box; transform: rotate(var(--swing, 0deg)); }
+    .bloom, .drift { transform-box: fill-box; transform-origin: 50% 50%; }
+    .about__art .bloom { transform: scale(0); }
+    .about__art.is-in .bloom {
+      transform: none;
+      animation: bloom .8s var(--ease-out) backwards;
+      animation-delay: calc(var(--i) * 45ms + .2s);
+    }
+    .drift { animation: drift 7s var(--ease-in-out) infinite; animation-delay: calc(var(--i) * -1.8s); }
+
+    .about__copy { position: relative; z-index: 2; }
+    .about__list li {
+      display: flex;
+      align-items: baseline;
+      gap: .75em;
+      padding: 1.05em 0;
+      border-bottom: 1px dashed var(--line);
+      font-family: var(--font-serif);
+      font-weight: 600;
+      font-size: clamp(1.15rem, .95rem + .9vw, 1.58rem);
+      line-height: 1.6;
+      letter-spacing: .06em;
+    }
+    .about__list li::before {
+      content: "";
+      flex: none;
+      width: .9em;
+      height: .9em;
+      transform: translateY(.12em);
+      background: var(--bloom-400);
+      -webkit-mask: var(--bloom-mask) center / contain no-repeat;
+      mask: var(--bloom-mask) center / contain no-repeat;
+    }
+    .about__bridge {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 14px;
+      margin-top: 28px;
+    }
+    .about__hint {
+      font-size: .88rem;
+      color: var(--ink-mute);
+      letter-spacing: .04em;
+    }
+
+    /* ---------- 02 學位服展廳 (2.5D Three.js Showcase, plan §4.2) ---------- */
+    .gallery {
+      position: relative;
+      z-index: 2;
+      padding: clamp(72px, 9vw, 120px) 0;
+      background: linear-gradient(180deg, rgba(251, 243, 236, 0) 0%, rgba(251, 243, 236, .9) 12%, rgba(251, 243, 236, .9) 88%, rgba(251, 243, 236, 0) 100%);
+      overflow-x: clip;
+    }
+    .gallery__watermark {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(4.5rem, 11vw, 10.5rem);
+      letter-spacing: .16em;
+      white-space: nowrap;
+      color: transparent;
+      -webkit-text-stroke: 1px rgba(38, 35, 43, .06);
+      pointer-events: none;
+      user-select: none;
+    }
+    .gallery__layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1.05fr) minmax(0, .95fr);
+      align-items: center;
+      gap: clamp(28px, 5vw, 68px);
+    }
+    .gallery__stage {
+      position: relative;
+      aspect-ratio: 4 / 4.35;
+      border-radius: calc(var(--radius) + 8px);
+      background:
+        radial-gradient(circle at 50% 42%, var(--gallery-glow, rgba(201, 206, 214, .34)) 0%, rgba(255, 253, 249, .65) 56%, rgba(255, 253, 249, .92) 100%);
+      box-shadow: var(--shadow-soft), 0 0 0 1px var(--line);
+      overflow: hidden;
+      transition: background .5s ease;
+    }
+    #gallery-scene {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+    .gallery__sheen {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      background: linear-gradient(108deg, transparent 36%, rgba(255, 255, 255, .52) 50%, transparent 64%);
+      transform: translateX(-110%);
+    }
+    .gallery__sheen.is-sweep { animation: gallery-sweep .85s var(--ease-out); }
+    .gallery__stage-tag {
+      position: absolute;
+      left: 16px;
+      top: 16px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      background: rgba(255, 253, 249, .86);
+      box-shadow: 0 0 0 1px var(--line);
+      font-size: 12px;
+      letter-spacing: .08em;
+      color: var(--ink-soft);
+    }
+    .gallery__flip-btn {
+      position: absolute;
+      right: 16px;
+      bottom: 16px;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      border: 0;
+      border-radius: 999px;
+      background: rgba(38, 35, 43, .88);
+      color: var(--paper);
+      font: inherit;
+      font-size: 13px;
+      font-weight: 600;
+      letter-spacing: .06em;
+      cursor: pointer;
+      transition: transform .2s var(--ease-out), background-color .2s;
+    }
+    .gallery__flip-btn:hover { transform: translateY(-2px); background: var(--bloom-600); }
+
+    .gallery__tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      padding: 5px;
+      border-radius: 999px;
+      background: var(--paper);
+      box-shadow: 0 0 0 1px var(--line);
+      width: fit-content;
+    }
+    .gallery__tab {
+      padding: 8px 20px;
+      border: 0;
+      border-radius: 999px;
+      background: transparent;
+      color: var(--ink-soft);
+      font: inherit;
+      font-weight: 700;
+      letter-spacing: .12em;
+      cursor: pointer;
+      transition: background-color .25s, color .25s;
+    }
+    .gallery__tab[aria-selected="true"] {
+      background: var(--ink);
+      color: var(--paper);
+    }
+    .gallery__title {
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(1.45rem, 1.15rem + 1vw, 2rem);
+      letter-spacing: .1em;
+    }
+    .gallery__desc {
+      margin: 10px 0 20px;
+      color: var(--ink-soft);
+      line-height: 1.8;
+    }
+    .gallery__swatches-label {
+      font-size: .85rem;
+      letter-spacing: .16em;
+      color: var(--ink-mute);
+      margin-bottom: 10px;
+    }
+    .gallery__swatches {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-bottom: 20px;
+    }
+    .swatch {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 7px 14px 7px 9px;
+      border-radius: 999px;
+      border: 1.5px solid var(--line);
+      background: var(--paper);
+      color: var(--ink);
+      font: inherit;
+      font-size: .9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: border-color .2s, transform .2s var(--ease-out), box-shadow .2s;
+    }
+    .swatch:hover { transform: translateY(-2px); }
+    .swatch[aria-pressed="true"] {
+      border-color: var(--ink);
+      box-shadow: 0 8px 20px -12px rgba(38, 35, 43, .5);
+      font-weight: 700;
+    }
+    .swatch__dot {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      box-shadow: inset 0 0 0 1px rgba(0, 0, 0, .18);
+      flex: none;
+    }
+    .gallery__note {
+      padding: 12px 16px;
+      border-radius: 14px;
+      background: rgba(255, 253, 249, .8);
+      border: 1px dashed var(--line);
+      font-size: .86rem;
+      color: var(--ink-soft);
+    }
+
+    /* ---------- 03 其他服務 & 朱印卷軸 ---------- */
+    .service { position: relative; z-index: 2; padding: clamp(72px, 10vw, 130px) 0 clamp(56px, 8vw, 96px); }
+    .service__lead {
+      text-align: center;
+      font-family: var(--font-serif);
+      font-weight: 600;
+      color: var(--ink-soft);
+      letter-spacing: .1em;
+    }
+    .service__lead b {
+      display: block;
+      margin-top: .35em;
+      font-weight: 900;
+      font-size: clamp(1.3rem, 1rem + 1.3vw, 1.9rem);
+      color: var(--ink);
+    }
+    .service__cards {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: clamp(16px, 3vw, 32px);
+      margin: clamp(36px, 5vw, 56px) 0 clamp(52px, 7vw, 84px);
+    }
+    .spot {
+      position: relative;
+      padding: 18px 18px 24px;
+      border-radius: calc(var(--radius) + 6px);
+      background:
+        radial-gradient(240px circle at var(--mx, 50%) var(--my, 50%), rgba(249, 205, 184, .34), transparent 70%),
+        var(--paper);
+      box-shadow: var(--shadow-soft), 0 0 0 1px var(--line);
+      text-align: center;
+      transition: transform .35s var(--ease-out);
+    }
+    .spot:hover { transform: translateY(-4px); }
+    .spot svg { width: 100%; height: auto; overflow: visible; }
+    .spot h3 {
+      margin-top: 6px;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(1.25rem, 1.05rem + .8vw, 1.6rem);
+      letter-spacing: .3em;
+      text-indent: .3em;
+    }
+    .seals-scroll {
+      position: relative;
+      max-width: 960px;
+      margin: 0 auto;
+      padding: clamp(24px, 4vw, 42px) clamp(18px, 4vw, 44px);
+      border-radius: 18px;
+      background:
+        linear-gradient(90deg, rgba(217, 198, 182, .28), transparent 14px, transparent calc(100% - 14px), rgba(217, 198, 182, .28)),
+        var(--paper-warm);
+      box-shadow: var(--shadow-soft), inset 0 0 0 1px var(--line);
+    }
+    .seals-scroll__caption {
+      text-align: center;
+      margin-bottom: 22px;
+      font-family: var(--font-latin);
+      font-style: italic;
+      font-size: .95rem;
+      letter-spacing: .16em;
+      color: var(--ink-mute);
+    }
+    .seals {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: clamp(18px, 3.2vw, 36px) clamp(12px, 2.5vw, 32px);
+    }
+    .seals li { display: flex; justify-content: center; }
+    .seal {
+      --r: 0deg;
+      position: relative;
+      isolation: isolate;
+      writing-mode: vertical-rl;
+      box-sizing: content-box;
+      inline-size: 2.12em;
+      padding: .3em .32em;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(1.45rem, 1rem + 1.6vw, 2.1rem);
+      line-height: 1.1;
+      letter-spacing: .04em;
+      text-align: center;
+      color: #FFF6EE;
+      transform: rotate(var(--r));
+    }
+    .seal::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      border-radius: .14em;
+      background: var(--shu);
+      filter: url(#k-ink);
+    }
+    .seal--zhu { color: var(--shu); }
+    .seal--zhu::before {
+      background: rgba(255, 253, 249, .94);
+      box-shadow: inset 0 0 0 .1em var(--shu);
+    }
+    .seals .seal { opacity: 0; }
+    .seals.is-in .seal { animation: stamp .62s var(--ease-out) both; animation-delay: calc(var(--i) * 90ms); }
+
+    /* ---------- 04 承製院校 ---------- */
+    .schools {
+      position: relative;
+      z-index: 2;
+      padding: clamp(64px, 9vw, 120px) 0;
+      background: linear-gradient(rgba(255, 242, 246, 0), rgba(255, 242, 246, .62) 25%, rgba(255, 242, 246, .62) 75%, rgba(255, 242, 246, 0));
+    }
+    .schools__layout {
+      display: grid;
+      grid-template-columns: minmax(0, 360px) minmax(0, 1fr);
+      align-items: start;
+      gap: clamp(28px, 4vw, 56px);
+    }
+    .schools__lead { font-family: var(--font-serif); font-weight: 600; color: var(--ink-soft); letter-spacing: .1em; }
+    .schools__count {
+      font-family: var(--font-latin);
+      font-weight: 600;
+      font-size: clamp(4.6rem, 3rem + 6vw, 7.6rem);
+      line-height: 1;
+      color: var(--bloom-600);
+      font-variant-numeric: lining-nums tabular-nums;
+      margin: 6px 0 18px;
+    }
+    .schools__unit {
+      margin-left: .12em;
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: .3em;
+      color: var(--ink);
+    }
+    .schools__search { position: relative; }
+    .schools__search .icon { position: absolute; left: 18px; top: 25px; translate: 0 -50%; color: var(--ink-mute); pointer-events: none; }
+    .schools__search input {
+      width: 100%;
+      height: 50px;
+      padding: 0 18px 0 46px;
+      border: 1.5px solid var(--line);
+      border-radius: 999px;
+      background: var(--paper);
+      box-shadow: var(--shadow-soft);
+      font: inherit;
+      color: var(--ink);
+    }
+    .schools__status { min-height: 1.5em; margin-top: 8px; font-size: .88rem; color: var(--ink-mute); }
+    .schools__wall { display: flex; flex-wrap: wrap; gap: 8px; }
+    .schools__wall li {
+      padding: .36em .9em;
+      border-radius: 999px;
+      background: var(--paper);
+      box-shadow: 0 0 0 1px var(--line);
+      font-size: .92rem;
+      font-weight: 500;
+      letter-spacing: .05em;
+      transition: opacity .25s, background-color .25s, transform .25s var(--ease-out);
+    }
+    .schools__wall li.is-dim { opacity: .24; }
+    .schools__wall li.is-hit {
+      background: var(--bloom-200);
+      box-shadow: 0 0 0 1.5px var(--bloom-400);
+      transform: translateY(-2px);
+    }
+    .schools__more { margin-top: 18px; font-family: var(--font-serif); font-weight: 600; color: var(--ink-soft); letter-spacing: .1em; }
+
+    /* ---------- 05 規格與相關產品 ---------- */
+    .spec-products { position: relative; z-index: 2; padding: clamp(64px, 9vw, 110px) 0; }
+    .spec__card {
+      max-width: 900px;
+      margin: 0 auto clamp(48px, 7vw, 84px);
+      border-radius: calc(var(--radius) + 6px);
+      background: var(--paper);
+      box-shadow: var(--shadow-soft), 0 0 0 1px var(--line);
+      overflow: hidden;
+    }
+    .spec__table { width: 100%; border-collapse: collapse; }
+    .spec__table th, .spec__table td { padding: 16px 22px; text-align: left; border-bottom: 1px dashed var(--line); }
+    .spec__table thead th {
+      background: var(--paper-warm);
+      font-size: .88rem;
+      font-weight: 500;
+      letter-spacing: .18em;
+      color: var(--ink-mute);
+      border-bottom: 0;
+    }
+    .spec__table tbody th { font-family: var(--font-serif); font-weight: 900; font-size: 1.1rem; white-space: nowrap; }
+    .spec__table tbody tr:last-child > * { border-bottom: 0; }
+    .spec__table td a { color: var(--shu); font-weight: 700; }
+
+    .products__layout {
+      display: grid;
+      grid-template-columns: minmax(0, 440px) minmax(0, 1fr);
+      align-items: center;
+      gap: clamp(28px, 5vw, 60px);
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    .products__svg { width: 100%; height: auto; overflow: visible; }
+    .products__text { font-size: clamp(.98rem, .94rem + .3vw, 1.1rem); line-height: 2.35; color: var(--ink-soft); }
+    .tag {
+      display: inline-block;
+      padding: 0 .6em;
+      border-radius: 999px;
+      background: var(--bloom-50);
+      box-shadow: inset 0 0 0 1px var(--bloom-200);
+      color: var(--ink);
+      font-weight: 500;
+      line-height: 1.8;
+      white-space: nowrap;
+    }
+
+    /* ---------- 06 聯絡我們 & 頁尾 ---------- */
+    .contact { position: relative; z-index: 2; padding: clamp(48px, 7vw, 96px) 0 clamp(72px, 9vw, 110px); }
+    .contact__card {
+      max-width: 620px;
+      margin-inline: auto;
+      padding: clamp(24px, 4vw, 42px) clamp(20px, 4vw, 44px) clamp(16px, 2vw, 24px);
+      border-radius: calc(var(--radius) + 8px);
+      background: var(--paper);
+      box-shadow: var(--shadow-soft), 0 0 0 1px var(--line);
+    }
+    .contact__company {
+      font-family: var(--font-serif);
+      font-weight: 900;
+      font-size: clamp(1.25rem, 1.1rem + .7vw, 1.65rem);
+      letter-spacing: .1em;
+    }
+    .contact__company span {
+      display: block;
+      font-family: var(--font-latin);
+      font-style: italic;
+      font-weight: 500;
+      font-size: 1.02rem;
+      color: var(--ink-soft);
+    }
+    .contact__list { display: grid; gap: 12px; margin: 22px 0 0; }
+    .contact__list > div {
+      display: grid;
+      grid-template-columns: 4.6em minmax(0, 1fr);
+      align-items: baseline;
+      gap: 12px;
+      padding-bottom: 12px;
+      border-bottom: 1px dashed var(--line);
+    }
+    .contact__list > div:last-child { border-bottom: 0; }
+    .contact__list dt {
+      display: flex;
+      align-items: center;
+      gap: .45em;
+      font-size: .88rem;
+      letter-spacing: .16em;
+      color: var(--ink-mute);
+    }
+    .contact__list dd { font-weight: 500; overflow-wrap: anywhere; }
+    .contact__list dd a { text-decoration-color: var(--bloom-400); }
+
+    .site-footer {
+      position: relative;
+      z-index: 2;
+      padding: 36px 0 44px;
+      background: var(--paper-warm);
+      text-align: center;
+      font-size: .9rem;
+      color: var(--ink-soft);
+      line-height: 1.9;
+    }
+    .site-footer__name { font-family: var(--font-serif); font-weight: 900; font-size: 1.04rem; color: var(--ink); letter-spacing: .12em; }
+    .site-footer__name span { font-family: var(--font-latin); font-style: italic; font-weight: 500; margin-left: .5em; }
+    .site-footer__copy { margin-top: 10px; font-size: .8rem; color: var(--ink-mute); }
+
+    /* ---------- Prototype Inspector HUD (compact, collapsible) ---------- */
     .hud {
       position: fixed;
-      left: 16px;
-      bottom: 16px;
-      z-index: 5;
-      width: min(340px, calc(100vw - 32px));
-      padding: 14px 16px;
+      left: 14px;
+      bottom: 14px;
+      z-index: 30;
+      width: min(370px, calc(100vw - 28px));
+      padding: 12px 14px;
       border-radius: 16px;
-      background: rgba(255, 253, 249, .92);
-      box-shadow: 0 18px 40px -22px rgba(70, 40, 60, .55), 0 0 0 1px var(--line);
-      font-size: 13px;
-      line-height: 1.6;
+      background: rgba(255, 253, 249, .94);
+      box-shadow: 0 18px 40px -20px rgba(70, 40, 60, .55), 0 0 0 1px var(--line);
+      -webkit-backdrop-filter: blur(12px);
+      backdrop-filter: blur(12px);
+      font-size: 12.5px;
+      line-height: 1.5;
     }
-    .hud h2 { margin: 0 0 2px; font: 900 15px/1.4 "Noto Serif TC", serif; letter-spacing: .1em; }
-    .hud p { margin: 0 0 8px; color: var(--ink-soft); }
-    .hud__row { display: flex; flex-wrap: wrap; gap: 6px 12px; margin-bottom: 8px; }
-    .hud label { display: inline-flex; align-items: center; gap: 5px; cursor: pointer; }
-    .hud button {
-      padding: 6px 12px;
+    .hud__head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    .hud__head h2 { margin: 0; font: 900 14px/1.3 "Noto Serif TC", serif; letter-spacing: .08em; }
+    .hud__meta { display: flex; align-items: center; gap: 8px; }
+    .hud__fps { font-variant-numeric: tabular-nums; color: var(--ink-mute); font-size: 11.5px; }
+    .hud__collapse {
+      padding: 3px 9px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: var(--paper);
+      color: var(--ink-soft);
+      font: inherit;
+      font-size: 11.5px;
+      cursor: pointer;
+    }
+    .hud.is-collapsed .hud__body { display: none; }
+    .hud.is-collapsed { width: auto; }
+    .hud__stage {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 8px;
+      padding: 6px 10px;
+      border-radius: 10px;
+      background: var(--paper-warm);
+      margin-bottom: 8px;
+    }
+    .hud__stage strong { color: var(--bloom-600); font-weight: 700; }
+    .hud__bar {
+      height: 4px;
+      border-radius: 999px;
+      background: var(--line);
+      overflow: hidden;
+      margin-bottom: 8px;
+    }
+    .hud__bar i {
+      display: block;
+      height: 100%;
+      width: 0%;
+      background: linear-gradient(90deg, var(--bloom-400), var(--shu));
+    }
+    .hud__row { display: flex; flex-wrap: wrap; gap: 5px 10px; margin-bottom: 7px; }
+    .hud__row:last-child { margin-bottom: 0; }
+    .hud label { display: inline-flex; align-items: center; gap: 4px; cursor: pointer; }
+    .hud__btn {
+      padding: 5px 11px;
       border: 0;
       border-radius: 999px;
       background: var(--ink);
       color: var(--paper);
       font: inherit;
       font-weight: 500;
+      font-size: 12px;
       cursor: pointer;
     }
-    .hud button[aria-pressed="true"] { background: var(--shu); }
-    .hud button:focus-visible, .hud input:focus-visible { outline: 2.5px solid var(--bloom-600); outline-offset: 2px; }
-    .hud__fps { font-variant-numeric: tabular-nums; color: var(--ink-soft); }
-
-    /* sharpness check: the same gown as live vector SVG (how the site draws it today) beside the three.js texture */
-    .compare { position: fixed; inset: 0; z-index: 4; pointer-events: none; }
-    .compare[hidden] { display: none; }
-    .compare__vector { position: absolute; overflow: visible; }
-    .compare__tag {
-      position: absolute;
-      transform: translate(-50%, -100%);
-      padding: 4px 12px;
-      border-radius: 999px;
-      background: rgba(38, 35, 43, .88);
-      color: var(--paper);
-      font-size: 13px;
-      white-space: nowrap;
+    .hud__btn--accent { background: var(--shu); }
+    .hud__btn--ghost {
+      background: var(--paper);
+      color: var(--ink);
+      box-shadow: inset 0 0 0 1px var(--line);
     }
 
-    .no-webgl .hud p::after { content: "（這個瀏覽器無法啟用 WebGL，看不到場景）"; color: var(--shu); }
+    /* ---------- Scroll Reveals & Keyframes ---------- */
+    [data-reveal] {
+      opacity: 0;
+      transform: translateY(24px);
+      transition: opacity .85s var(--ease-out), transform .85s var(--ease-out);
+      transition-delay: calc(var(--i, 0) * 100ms);
+    }
+    [data-reveal].is-in { opacity: 1; transform: none; }
+    .about__art[data-reveal], .seals[data-reveal] { opacity: 1; transform: none; }
+
+    @keyframes sun-breathe {
+      from { transform: scale(1); opacity: .88; }
+      to { transform: scale(1.07); opacity: 1; }
+    }
+    @keyframes cue-fall {
+      0% { transform: translateY(0) rotate(0); opacity: 0; }
+      15% { opacity: 1; }
+      100% { transform: translateY(54px) rotate(220deg); opacity: 0; }
+    }
+    @keyframes bloom {
+      from { transform: scale(0) rotate(-50deg); }
+      to { transform: none; }
+    }
+    @keyframes drift {
+      0% { transform: translate(0, -20px) rotate(0); opacity: 0; }
+      20% { opacity: 1; }
+      100% { transform: translate(40px, 110px) rotate(200deg); opacity: 0; }
+    }
+    @keyframes stamp {
+      0% { opacity: 0; transform: scale(1.4) rotate(calc(var(--r) - 9deg)); filter: blur(3px); }
+      55% { opacity: 1; transform: scale(.93) rotate(var(--r)); filter: blur(0); }
+      100% { opacity: 1; transform: scale(1) rotate(var(--r)); }
+    }
+    @keyframes gallery-sweep {
+      from { transform: translateX(-110%); }
+      to { transform: translateX(120%); }
+    }
+
+    /* ---------- Responsive ---------- */
+    @media (max-width: 1359px) { .hero__vertical { display: none; } }
+    @media (max-width: 959px) {
+      .hero__copy { top: 11vh; width: calc(100vw - 48px); }
+      .hero__heading { display: block; }
+      .hero__badge { --size: 62px; right: 0; bottom: -78px; top: auto; }
+      .hero__lead { padding-right: 82px; }
+      .about__watermark { display: none; }
+      .about__inner, .gallery__layout, .schools__layout, .products__layout {
+        grid-template-columns: minmax(0, 1fr);
+      }
+      .about__art { max-width: 500px; margin-inline: auto; }
+      .about__vertical-note { display: none; }
+      .ed-head--left { text-align: center; }
+      .ed-head--left h2::after { margin-inline: auto; }
+      .gallery__stage { max-width: 460px; margin-inline: auto; width: 100%; }
+    }
     @media (max-width: 767px) {
-      .copy { top: 12vh; width: calc(100vw - 48px); }
-      .hud { font-size: 12px; }
+      :root { --header-h: 64px; }
+      .menu-toggle { display: inline-flex; }
+      .site-nav {
+        position: fixed;
+        top: calc(var(--header-h) + 8px);
+        left: 12px;
+        right: 12px;
+        display: grid;
+        gap: 2px;
+        padding: 8px;
+        border-radius: 18px;
+        background: var(--paper);
+        box-shadow: var(--shadow-soft), 0 0 0 1px var(--line);
+        opacity: 0;
+        visibility: hidden;
+        transform: translateY(-8px);
+        transition: opacity .25s, transform .25s var(--ease-out), visibility .25s;
+      }
+      .site-header.is-open .site-nav { opacity: 1; visibility: visible; transform: none; }
+      .site-nav a { padding: 12px 14px; border-radius: 12px; background: none; }
+      .header-call span { display: none; }
+      .brand__text em { display: none; }
+      .service__cards { grid-template-columns: minmax(0, 1fr); max-width: 360px; margin-inline: auto; }
+      .seals { grid-template-columns: repeat(2, minmax(0, 1fr)); max-width: 320px; margin-inline: auto; }
+      .scroll-cue { display: none; }
+      .hud { bottom: 10px; left: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: .001ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .001ms !important;
+      }
     }
   </style>
 </head>
 <body>
-  <div class="sky" aria-hidden="true"></div>
-  <canvas id="scene" aria-label="2.5D 場景：草坪上三件穿在人台上的學位服"></canvas>
-
-  <div class="copy" id="copy">
-    <p class="copy__script" lang="en">Congratulations on your graduation</p>
-    <h1><span>這一天的你，</span><br><span>值得一件<mark>好禮服</mark>。</span></h1>
-    <p class="lead"><span>本公司專營</span><span>國內外各大學之</span><span>博士、碩士、學士服</span></p>
-  </div>
-
-  <aside class="hud" aria-label="原型控制">
-    <h2>2.5D 手繪原型</h2>
-    <p>移動滑鼠看景深，滑過草地會撥開草；往下捲，鏡頭往前推。</p>
-    <div class="hud__row">
-      <label><input type="checkbox" id="t-sway" checked>布料擺動</label>
-      <label><input type="checkbox" id="t-grass" checked>草坪</label>
-      <label><input type="checkbox" id="t-dof" checked>景深模糊</label>
-      <label><input type="checkbox" id="t-petals" checked>花瓣</label>
+  <header class="site-header" id="site-header">
+    <div class="container site-header__bar">
+      <a class="brand" href="#top">
+        <span class="brand__seal" aria-hidden="true">黑美人</span>
+        <span class="brand__text"><strong>黑美人服飾開發有限公司</strong><em lang="en">Black A Beauty</em></span>
+      </a>
+      <button class="menu-toggle" type="button" aria-expanded="false" aria-controls="site-nav" aria-label="開啟選單">
+        <svg class="icon" aria-hidden="true"><use href="#i-menu" /></svg>
+      </button>
+      <nav class="site-nav" id="site-nav" aria-label="主選單">
+        <a href="#about">關於我們</a>
+        <a href="#gallery">學位服展廳</a>
+        <a href="#service">其他服務</a>
+        <a href="#schools">承製院校</a>
+        <a href="#contact">聯絡我們</a>
+      </nav>
+      <a class="btn btn--primary header-call" href="tel:073493832" aria-label="撥打電話 (07)3493832">
+        <svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg><span>(07)3493832</span>
+      </a>
     </div>
-    <div class="hud__row">
-      <button type="button" id="b-gust">起風</button>
-      <button type="button" id="b-toss">再拋一次方帽</button>
-      <button type="button" id="b-compare" aria-pressed="false">銳利度比對</button>
+  </header>
+
+  <main>
+    <!-- Stage 00: Sticky 2.5D Three.js Hero Track (dollying across lawn -> torn paper rises over it) -->
+    <section class="hero-track" id="top" aria-labelledby="hero-title">
+      <div class="hero-sticky">
+        <div class="sky" aria-hidden="true"></div>
+        <div class="sunlight" aria-hidden="true">
+          <div class="sun"></div>
+          <div class="rays" id="hero-rays">
+            <i style="--a:126deg;--w:9vmin"></i>
+            <i style="--a:141deg;--w:16vmin"></i>
+            <i style="--a:157deg;--w:6vmin"></i>
+          </div>
+        </div>
+        <canvas id="hero-scene" aria-label="2.5D 場景：草坪上三件穿在人台上的學位服"></canvas>
+
+        <p class="hero__vertical" id="hero-vertical" aria-hidden="true">黑美人服飾開發有限公司</p>
+
+        <div class="hero__copy" id="hero-copy">
+          <p class="hero__script" lang="en" data-copy="new">Congratulations on your graduation</p>
+          <div class="hero__heading">
+            <h1 id="hero-title"><span class="nw">這一天的你，</span><br><span class="nw">值得一件<mark>好禮服</mark>。</span></h1>
+            <p class="hero__badge" data-copy="new"><b>四十年</b><span>直營工廠</span></p>
+          </div>
+          <p class="hero__lead"><span class="nw">本公司專營</span><span class="nw">國內外各大學之</span><span class="nw">博士、碩士、學士服</span></p>
+          <div class="hero__actions">
+            <a class="btn btn--primary" href="tel:073493832"><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg>撥打 (07)3493832</a>
+            <a class="btn btn--ghost" href="https://www.google.com/maps/dir/?api=1&amp;destination=%E9%AB%98%E9%9B%84%E5%B8%82%E4%B8%89%E6%B0%91%E5%8D%80%E9%BC%8E%E8%B2%B4%E8%B7%AF62%E5%B7%B714%E8%99%9F" target="_blank" rel="noopener"><svg class="icon" aria-hidden="true"><use href="#i-pin" /></svg>門市導航</a>
+          </div>
+        </div>
+
+        <a class="scroll-cue" id="scroll-cue" href="#about" aria-label="往下捲動進入關於我們">
+          <span lang="en">scroll</span><i></i>
+        </a>
+      </div>
+    </section>
+
+    <!-- Paper Flow: starts with the torn washi paper edge that rises seamlessly over the 2.5D Hero -->
+    <div class="paper-flow" id="paper-flow">
+      <div class="torn-edge" aria-hidden="true">
+        <svg viewBox="0 0 1440 30" preserveAspectRatio="none">
+          <path d="M0 30 L0 16 L10 13.4 L20 9.6 L29.6 12.2 L41.4 10.8 L55.5 10.1 L64.9 9 L80.6 16.8 L89.9 15.9 L101.5 12.6 L117.8 16.2 L126.8 17.9 L137.5 14.8 L149.9 9.3 L160.3 15.8 L175.3 11.2 L191.2 16.3 L202.7 13.1 L214.1 11.3 L230.2 16.8 L244.6 13.5 L260.5 16.4 L276 15.8 L292.8 15.2 L304.1 15.4 L315.7 16.8 L326 16.6 L340.2 16.3 L353 16.2 L368.6 9.4 L379.5 10.8 L388.7 14.2 L404.2 14.6 L420 16.8 L435.5 10.9 L449 13.1 L461.1 13.8 L476.1 13.7 L488.2 13.5 L499.1 15.3 L514.3 11.7 L525.3 14.5 L538.7 17.4 L552.3 11.8 L566.1 14.2 L580.2 14.1 L590.5 10.9 L600.4 12 L614.5 16.9 L628.6 12.5 L640.4 12.6 L650.4 10.4 L659.8 13.3 L671.8 9.8 L685.9 12.6 L698.6 9.9 L714.3 11.5 L725.7 10.1 L736.4 12.9 L747 14.5 L760.6 15.8 L775.9 13.4 L791.8 15.2 L801.8 14.6 L816.6 17 L830.3 17.7 L841.6 18 L850.9 9.9 L862.4 16.7 L878.6 15.5 L891.9 11.2 L905.2 16 L915.7 16.3 L930.2 14.2 L946.8 11.8 L956 15.6 L969.1 14.5 L983.6 15.1 L993 15.4 L1009.9 16.6 L1024.3 14.1 L1035 14.7 L1048.6 13 L1057.8 16.8 L1072 17.8 L1083.4 15.7 L1100 14.1 L1113.9 10.8 L1124.9 13 L1137.3 9.4 L1150.9 16 L1166.6 9.8 L1178 14.5 L1190.4 11.9 L1201.7 9.7 L1213.7 12.9 L1227.8 13.5 L1241.1 12.9 L1255.1 17.1 L1271.7 13.2 L1287.3 17.8 L1301.5 12.6 L1315.5 9.5 L1326.8 9.3 L1342.6 10 L1353.5 15 L1364.3 11.4 L1374.4 15.8 L1385.8 14.6 L1400.9 9.1 L1416.5 17.2 L1431.6 17.6 L1440 14 L1440 30 Z" fill="#5A4636" opacity=".16" transform="translate(0 -4)" />
+          <path d="M0 30 L0 16 L10 13.4 L20 9.6 L29.6 12.2 L41.4 10.8 L55.5 10.1 L64.9 9 L80.6 16.8 L89.9 15.9 L101.5 12.6 L117.8 16.2 L126.8 17.9 L137.5 14.8 L149.9 9.3 L160.3 15.8 L175.3 11.2 L191.2 16.3 L202.7 13.1 L214.1 11.3 L230.2 16.8 L244.6 13.5 L260.5 16.4 L276 15.8 L292.8 15.2 L304.1 15.4 L315.7 16.8 L326 16.6 L340.2 16.3 L353 16.2 L368.6 9.4 L379.5 10.8 L388.7 14.2 L404.2 14.6 L420 16.8 L435.5 10.9 L449 13.1 L461.1 13.8 L476.1 13.7 L488.2 13.5 L499.1 15.3 L514.3 11.7 L525.3 14.5 L538.7 17.4 L552.3 11.8 L566.1 14.2 L580.2 14.1 L590.5 10.9 L600.4 12 L614.5 16.9 L628.6 12.5 L640.4 12.6 L650.4 10.4 L659.8 13.3 L671.8 9.8 L685.9 12.6 L698.6 9.9 L714.3 11.5 L725.7 10.1 L736.4 12.9 L747 14.5 L760.6 15.8 L775.9 13.4 L791.8 15.2 L801.8 14.6 L816.6 17 L830.3 17.7 L841.6 18 L850.9 9.9 L862.4 16.7 L878.6 15.5 L891.9 11.2 L905.2 16 L915.7 16.3 L930.2 14.2 L946.8 11.8 L956 15.6 L969.1 14.5 L983.6 15.1 L993 15.4 L1009.9 16.6 L1024.3 14.1 L1035 14.7 L1048.6 13 L1057.8 16.8 L1072 17.8 L1083.4 15.7 L1100 14.1 L1113.9 10.8 L1124.9 13 L1137.3 9.4 L1150.9 16 L1166.6 9.8 L1178 14.5 L1190.4 11.9 L1201.7 9.7 L1213.7 12.9 L1227.8 13.5 L1241.1 12.9 L1255.1 17.1 L1271.7 13.2 L1287.3 17.8 L1301.5 12.6 L1315.5 9.5 L1326.8 9.3 L1342.6 10 L1353.5 15 L1364.3 11.4 L1374.4 15.8 L1385.8 14.6 L1400.9 9.1 L1416.5 17.2 L1431.6 17.6 L1440 14 L1440 30 Z" fill="#FFFDF9" />
+        </svg>
+      </div>
+
+      <!-- Sticky far-depth kapok petals behind paper content -->
+      <canvas class="petals-back" id="petals-back" aria-hidden="true"></canvas>
+
+      <!-- Stage 01: 關於我們 (Verbatim copy + Approved Red-Gown Arch Illustration with 2.5D layered shadowbox depth) -->
+      <section class="about" id="about" aria-labelledby="about-title">
+        <p class="about__watermark" aria-hidden="true">關於我們</p>
+        <div class="container about__inner">
+          <div class="about__stage" id="about-stage">
+            <p class="about__vertical-note" aria-hidden="true">博士・碩士・學士服</p>
+            <figure class="about__art" id="about-art" data-reveal>
+              <svg class="about__svg" viewBox="0 0 640 600" role="img" aria-label="插畫：一男一女兩位穿著紅色學位袍的畢業生面對面聊天">
+                <defs>
+                  <clipPath id="ap-window">
+                    <path d="M84 580 L84 280 A236 236 0 0 1 556 280 L556 580 Z" />
+                  </clipPath>
+                  <pattern id="ap-bricks" width="132" height="36" patternUnits="userSpaceOnUse" x="84" y="40">
+                    <rect width="132" height="36" fill="#D99B85" />
+                    <rect x="0" y="0" width="42" height="16" fill="#C46A52" />
+                    <rect x="44" y="0" width="42" height="16" fill="#BB6149" />
+                    <rect x="88" y="0" width="42" height="16" fill="#CC735B" />
+                    <rect x="-22" y="18" width="42" height="16" fill="#CC735B" />
+                    <rect x="22" y="18" width="42" height="16" fill="#C46A52" />
+                    <rect x="66" y="18" width="42" height="16" fill="#BB6149" />
+                    <rect x="110" y="18" width="42" height="16" fill="#CC735B" />
+                  </pattern>
+                </defs>
+                <!-- Soft shadow behind arch -->
+                <path d="M84 592 L84 292 A236 236 0 0 1 556 292 L556 592 Z" fill="#3A2A3A" opacity=".08" filter="url(#k-soft)" />
+                <g clip-path="url(#ap-window)">
+                  <!-- Depth Layer -0.65: recessed brick wall, glass doorway & stone tiles (oversized slightly so parallax never reveals an edge) -->
+                  <g class="about-depth" data-depth="-0.65">
+                    <rect x="60" y="20" width="520" height="465" fill="url(#ap-bricks)" />
+                    <path d="M470 120 L580 120 L580 470 L470 470 Z" fill="#E9E1D4" />
+                    <path d="M470 120 L580 120 L580 132 L470 132 Z" fill="#D2C6B4" />
+                    <path d="M470 132 L482 132 L482 470 L470 470 Z" fill="#CFC3B0" />
+                    <path d="M490 150 L580 150 L580 470 L490 470 Z" fill="#B8C7CF" />
+                    <path d="M498 300 L506 300 L506 330 L498 330 Z" fill="#8C92A0" />
+                    <path d="M60 470 L580 470 L580 620 L60 620 Z" fill="#E6DED2" />
+                    <path d="M60 470 L580 470 L580 478 L60 478 Z" fill="#D4CABB" />
+                    <path d="M60 520 L580 520 M60 560 L580 560 M180 470 L160 610 M320 470 L320 610 M460 470 L480 610" stroke="#D4CABB" stroke-width="2" />
+                  </g>
+                  <!-- Depth Layer +0.25: the approved red-gown graduates -->
+                  <g class="about-depth" data-depth="0.25">
+                    <g class="pair__man">
+                      <path d="M176 278 C200 266 226 262 250 262 C274 262 294 268 308 282 C318 360 322 470 326 600 L146 600 C150 470 160 360 176 278 Z" fill="#A61C2E" stroke="#3E0610" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M176 278 C160 360 150 470 146 600 L168 600 C170 480 176 380 188 290 Z" fill="#7F1121" />
+                      <path d="M300 300 C308 380 312 480 314 600 L324 600 C322 470 318 370 308 290 Z" fill="#CF4456" />
+                      <path d="M200 470 C198 520 198 560 198 600 M286 470 C288 520 290 560 290 600" fill="none" stroke="#7F1121" stroke-width="5" stroke-linecap="round" />
+                      <path d="M220 262 C212 300 208 380 210 600 L248 600 L250 268 Z" fill="#1F202C" stroke="#3E0610" stroke-width="1.4" stroke-linejoin="round" />
+                      <path d="M220 262 C212 300 208 380 210 600 L220 600 C218 400 220 310 228 266 Z" fill="#14151D" />
+                      <path d="M256 266 L254 600 L276 600 C276 420 274 330 270 268 Z" fill="#1F202C" stroke="#3E0610" stroke-width="1.4" stroke-linejoin="round" />
+                      <path d="M268 270 C272 330 274 420 274 600 L270 600 C270 420 268 330 264 272 Z" fill="#43475F" opacity=".8" />
+                      <path d="M300 280 C320 300 330 340 328 392 C326 432 316 464 300 486 L272 448 C284 432 290 404 290 372 Z" fill="#A61C2E" stroke="#3E0610" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M314 300 C324 330 326 370 322 410 L316 410 C320 372 318 336 308 306 Z" fill="#CF4456" />
+                      <path d="M296 318 L326 326 L326 342 L296 334 Z M296 346 L328 354 L328 370 L296 362 Z M294 374 L328 382 L326 398 L292 390 Z" fill="#1F202C" />
+                      <path d="M180 276 C154 288 138 320 134 366 C130 410 136 452 150 490 C178 502 210 498 232 482 L244 444 C226 436 210 426 198 412 C192 380 194 330 206 294 Z" fill="#A61C2E" stroke="#3E0610" stroke-width="1.8" stroke-linejoin="round" />
+                      <path d="M180 276 C154 288 138 320 134 366 C130 410 136 452 150 490 C158 494 166 496 174 497 C160 456 156 410 160 366 C164 326 174 298 192 282 Z" fill="#7F1121" />
+                      <path d="M150 490 C178 502 210 498 232 482 L228 474 C206 488 178 492 152 482 Z" fill="#4E0812" />
+                      <clipPath id="ap-near-sleeve"><path d="M180 276 C154 288 138 320 134 366 C130 410 136 452 150 490 C178 502 210 498 232 482 L244 444 C226 436 210 426 198 412 C192 380 194 330 206 294 Z" /></clipPath>
+                      <g clip-path="url(#ap-near-sleeve)">
+                        <path d="M120 318 L214 330 L214 348 L120 336 Z M118 352 L214 364 L214 382 L118 370 Z M118 386 L214 398 L214 416 L118 404 Z" fill="#1F202C" />
+                        <path d="M120 318 L214 330 L214 333 L120 321 Z M118 352 L214 364 L214 367 L118 355 Z M118 386 L214 398 L214 401 L118 389 Z" fill="#43475F" opacity=".7" />
+                      </g>
+                      <path d="M204 296 C196 330 194 380 198 412" fill="none" stroke="#3E0610" stroke-width="1.2" opacity=".6" />
+                      <path d="M228 432 C232 418 250 414 262 418 C274 422 278 436 270 446 C260 454 240 452 232 444 Z" fill="#F6D9C4" stroke="#B98068" stroke-width="1.3" stroke-linejoin="round" />
+                      <path d="M246 420 C256 424 262 432 262 442 M238 426 C248 430 252 438 252 446" fill="none" stroke="#B98068" stroke-width="1.1" stroke-linecap="round" />
+                      <path d="M262 418 C272 422 278 436 270 446 C268 438 266 428 262 418 Z" fill="#E8BFA5" />
+                      <path d="M212 266 Q236 250 266 256 L274 270 Q246 260 222 272 Z" fill="#1F202C" stroke="#3E0610" stroke-width="1.2" stroke-linejoin="round" />
+                      <g transform="rotate(1.5 244 234)">
+                        <path d="M228 226 L230 262 C238 270 254 270 260 262 L258 228 Z" fill="#E8BFA5" stroke="#B98068" stroke-width="1.2" />
+                        <path d="M230 258 L248 274 L240 282 L226 266 Z M262 258 L250 274 L258 282 L266 266 Z" fill="#FFFFFF" stroke="#B9BEC8" stroke-width="1.2" stroke-linejoin="round" />
+                        <ellipse cx="206" cy="206" rx="7" ry="11" fill="#F6D9C4" stroke="#B98068" stroke-width="1.2" />
+                        <path d="M205 200 Q209 206 205 212" fill="none" stroke="#B98068" stroke-width="1" />
+                        <g transform="translate(0 178) scale(1 1.09) translate(0 -178)">
+                          <path d="M208 182 C206 202 210 220 224 232 C234 240 246 243 254 240 C264 236 272 226 274 214 C276 204 276 194 272 184 C262 170 230 166 208 182 Z" fill="#F6D9C4" stroke="#B98068" stroke-width="1.4" stroke-linejoin="round" />
+                          <path d="M208 182 C206 202 210 220 224 232 C228 235 232 237 236 238 C222 226 216 206 218 186 Z" fill="#E8BFA5" opacity=".7" />
+                        </g>
+                        <g transform="translate(-3 2)">
+                          <path d="M226 196 Q233 192 240 195 M254 194 Q260 191 266 194" fill="none" stroke="#2E2A30" stroke-width="2.4" stroke-linecap="round" />
+                          <path d="M227 205 Q234 200 241 205" fill="none" stroke="#2E2A30" stroke-width="2.4" stroke-linecap="round" />
+                          <ellipse cx="237.5" cy="208" rx="3.6" ry="4.4" fill="#3A2C26" /><circle cx="238.8" cy="206.6" r="1.2" fill="#fff" />
+                          <path d="M255 204 Q261 200 266 204" fill="none" stroke="#2E2A30" stroke-width="2.2" stroke-linecap="round" />
+                          <ellipse cx="263.5" cy="207.5" rx="3" ry="4" fill="#3A2C26" /><circle cx="264.6" cy="206.2" r="1" fill="#fff" />
+                        </g>
+                        <g transform="translate(0 4)">
+                          <path d="M250 215.5 Q252 217 254 216" fill="none" stroke="#B98068" stroke-width="1.2" stroke-linecap="round" opacity=".55" />
+                          <path d="M237 224 Q246 235 256 224 Q246 227 237 224 Z" fill="#B5443A" stroke="#8E3329" stroke-width="1" stroke-linejoin="round" />
+                          <path d="M240 225.5 Q246 227.5 253 225.5 L252 228 Q246 229.5 241 228 Z" fill="#FFFFFF" />
+                        </g>
+                        <path d="M210 186 C206 168 220 154 240 152 C260 150 276 160 278 178 C278 186 276 190 274 194 C268 182 258 176 246 176 C236 182 222 184 212 196 Z" fill="#2E2A30" />
+                        <path d="M240 160 C254 158 266 164 272 174" fill="none" stroke="#4E4852" stroke-width="2.4" stroke-linecap="round" />
+                        <path d="M210 188 C208 196 208 204 210 210 L214 200 Z" fill="#2E2A30" />
+                        <path d="M200 160 C214 152 246 150 272 158 L270 176 C246 168 220 170 204 178 Z" fill="#2B2F42" stroke="#0D0F16" stroke-width="1.4" stroke-linejoin="round" />
+                        <path d="M200 160 L204 178 C208 176 212 174 216 173 L212 156 Z" fill="#1A1D29" />
+                        <path d="M172 150 L238 128 L304 148 L238 168 Z" fill="#2B2F42" stroke="#0D0F16" stroke-width="1.6" stroke-linejoin="round" />
+                        <path d="M238 128 L304 148 L238 168 Z" fill="#56607F" opacity=".45" />
+                        <path d="M172 150 L238 168 L238 174 L172 156 Z" fill="#1A1D29" stroke="#0D0F16" stroke-width="1.2" stroke-linejoin="round" />
+                        <path d="M238 168 L304 148 L304 154 L238 174 Z" fill="#2B2F42" stroke="#0D0F16" stroke-width="1.2" stroke-linejoin="round" />
+                        <ellipse cx="238" cy="148" rx="5" ry="3" fill="#E8B52E" stroke="#9C700E" stroke-width=".8" />
+                        <path d="M238 148 Q206 146 176 152" fill="none" stroke="#E8B52E" stroke-width="2.2" stroke-linecap="round" />
+                        <g class="pair-tassel" style="transform-origin:176px 152px">
+                          <path d="M176 152 L176 180" stroke="#E8B52E" stroke-width="2.2" stroke-linecap="round" />
+                          <rect x="171" y="178" width="10" height="13" rx="3.5" fill="#E8B52E" stroke="#9C700E" stroke-width=".8" />
+                          <path d="M171 190 L181 190 L186 230 Q182 234 176 231 Q170 234 166 230 Z" fill="#E8B52E" stroke="#9C700E" stroke-width=".8" stroke-linejoin="round" />
+                          <path d="M174 194 L170 228 M178 194 L180 230" stroke="#9C700E" stroke-width=".8" />
+                        </g>
+                      </g>
+                    </g>
+                    <g class="pair__woman">
+                      <g transform="translate(380 250) scale(.92) translate(-380 -250)">
+                        <path d="M346 196 C340 170 360 154 382 154 C406 154 424 170 424 196 C426 236 430 280 424 322 C412 332 396 332 386 324 L384 300 C372 304 360 300 350 292 C350 262 348 228 346 196 Z" fill="#5A3A2C" stroke="#3E271D" stroke-width="1.2" stroke-linejoin="round" />
+                        <path d="M412 230 C416 260 418 290 414 316" fill="none" stroke="#7A5444" stroke-width="2.4" stroke-linecap="round" />
+                      </g>
+                      <g transform="translate(609 24) scale(-.94 .94)">
+                        <path d="M176 278 C200 266 226 262 250 262 C274 262 294 268 308 282 C318 360 322 470 326 600 L146 600 C150 470 160 360 176 278 Z" fill="#A61C2E" stroke="#3E0610" stroke-width="1.8" stroke-linejoin="round" />
+                        <path d="M176 278 C160 360 150 470 146 600 L168 600 C170 480 176 380 188 290 Z" fill="#7F1121" />
+                        <path d="M300 300 C308 380 312 480 314 600 L324 600 C322 470 318 370 308 290 Z" fill="#CF4456" />
+                        <path d="M200 470 C198 520 198 560 198 600 M286 470 C288 520 290 560 290 600" fill="none" stroke="#7F1121" stroke-width="5" stroke-linecap="round" />
+                        <path d="M220 262 C212 300 208 380 210 600 L248 600 L250 268 Z" fill="#1F202C" stroke="#3E0610" stroke-width="1.4" stroke-linejoin="round" />
+                        <path d="M220 262 C212 300 208 380 210 600 L220 600 C218 400 220 310 228 266 Z" fill="#14151D" />
+                        <path d="M256 266 L254 600 L276 600 C276 420 274 330 270 268 Z" fill="#1F202C" stroke="#3E0610" stroke-width="1.4" stroke-linejoin="round" />
+                        <path d="M268 270 C272 330 274 420 274 600 L270 600 C270 420 268 330 264 272 Z" fill="#43475F" opacity=".8" />
+                        <path d="M300 280 C320 300 330 340 328 392 C326 432 316 464 300 486 L272 448 C284 432 290 404 290 372 Z" fill="#A61C2E" stroke="#3E0610" stroke-width="1.8" stroke-linejoin="round" />
+                        <path d="M314 300 C324 330 326 370 322 410 L316 410 C320 372 318 336 308 306 Z" fill="#CF4456" />
+                        <path d="M296 318 L326 326 L326 342 L296 334 Z M296 346 L328 354 L328 370 L296 362 Z M294 374 L328 382 L326 398 L292 390 Z" fill="#1F202C" />
+                        <path d="M180 276 C154 288 138 320 134 366 C130 410 136 452 150 490 C178 502 210 498 232 482 L244 444 C226 436 210 426 198 412 C192 380 194 330 206 294 Z" fill="#A61C2E" stroke="#3E0610" stroke-width="1.8" stroke-linejoin="round" />
+                        <path d="M180 276 C154 288 138 320 134 366 C130 410 136 452 150 490 C158 494 166 496 174 497 C160 456 156 410 160 366 C164 326 174 298 192 282 Z" fill="#7F1121" />
+                        <path d="M150 490 C178 502 210 498 232 482 L228 474 C206 488 178 492 152 482 Z" fill="#4E0812" />
+                        <clipPath id="ap-near-sleeve-w"><path d="M180 276 C154 288 138 320 134 366 C130 410 136 452 150 490 C178 502 210 498 232 482 L244 444 C226 436 210 426 198 412 C192 380 194 330 206 294 Z" /></clipPath>
+                        <g clip-path="url(#ap-near-sleeve-w)">
+                          <path d="M120 318 L214 330 L214 348 L120 336 Z M118 352 L214 364 L214 382 L118 370 Z M118 386 L214 398 L214 416 L118 404 Z" fill="#1F202C" />
+                          <path d="M120 318 L214 330 L214 333 L120 321 Z M118 352 L214 364 L214 367 L118 355 Z M118 386 L214 398 L214 401 L118 389 Z" fill="#43475F" opacity=".7" />
+                        </g>
+                        <path d="M204 296 C196 330 194 380 198 412" fill="none" stroke="#3E0610" stroke-width="1.2" opacity=".6" />
+                        <path d="M212 266 Q236 250 266 256 L274 270 Q246 260 222 272 Z" fill="#1F202C" stroke="#3E0610" stroke-width="1.2" stroke-linejoin="round" />
+                      </g>
+                      <g transform="rotate(-1.5 380 240)">
+                        <path d="M392 232 L392 266 C386 272 372 272 366 266 L366 234 Z" fill="#E8BFA5" stroke="#B98068" stroke-width="1.2" />
+                        <path d="M392 262 L376 276 L384 284 L398 270 Z M362 262 L374 276 L366 284 L356 270 Z" fill="#FFFFFF" stroke="#B9BEC8" stroke-width="1.2" stroke-linejoin="round" />
+                        <g transform="translate(380 250) scale(.92) translate(-380 -250)">
+                          <path d="M412 196 C414 214 410 232 396 244 C386 252 374 254 366 250 C356 246 350 236 348 224 C346 214 346 204 350 194 C360 182 392 178 412 196 Z" fill="#F6D9C4" stroke="#B98068" stroke-width="1.4" stroke-linejoin="round" />
+                          <path d="M412 196 C414 214 410 232 396 244 C392 247 388 249 384 250 C398 238 404 218 402 198 Z" fill="#E8BFA5" opacity=".7" />
+                          <g transform="translate(1.8 0)">
+                            <path d="M358 201 Q364 197.5 370 199.5 M382 199 Q389 195.5 396 198.5" fill="none" stroke="#8C6250" stroke-width="1.5" stroke-linecap="round" />
+                            <path d="M357 213.5 Q363.5 207.5 371 212" fill="none" stroke="#2E2A30" stroke-width="2.2" stroke-linecap="round" />
+                            <path d="M379 212 Q387 205.5 395.5 211" fill="none" stroke="#2E2A30" stroke-width="2.4" stroke-linecap="round" />
+                            <path d="M395.5 211 L398.5 208.5 M394.5 209 L397 206" stroke="#2E2A30" stroke-width="1.3" stroke-linecap="round" />
+                            <ellipse cx="362.5" cy="217" rx="3.8" ry="4.8" fill="#4A2F24" /><circle cx="361.2" cy="215.2" r="1.4" fill="#fff" /><circle cx="363.8" cy="219.4" r=".7" fill="#fff" />
+                            <ellipse cx="385" cy="217" rx="4.4" ry="5.4" fill="#4A2F24" /><circle cx="383.4" cy="214.9" r="1.6" fill="#fff" /><circle cx="386.6" cy="219.6" r=".8" fill="#fff" />
+                            <path d="M358 222.5 Q364 225 370 222.5 M380 223 Q387 226 394 223" fill="none" stroke="#C98F74" stroke-width="1.2" stroke-linecap="round" />
+                          </g>
+                          <ellipse cx="357" cy="229" rx="5" ry="3" fill="#F4A7A0" opacity=".7" />
+                          <ellipse cx="394" cy="229" rx="6" ry="3.4" fill="#F4A7A0" opacity=".7" />
+                          <path d="M369 226 Q371 227.5 373 226.5" fill="none" stroke="#B98068" stroke-width="1.2" stroke-linecap="round" opacity=".55" />
+                          <path d="M366 237 Q374.5 246 383 237 Q374.5 240 366 237 Z" fill="#C9574A" stroke="#8E3329" stroke-width="1" stroke-linejoin="round" />
+                          <path d="M349 196 C350 180 364 168 382 168 C398 168 412 178 414 194 C406 187 398 184 390 185 C384 190 376 193 368 195 C362 192 355 192 349 196 Z" fill="#5A3A2C" />
+                          <path d="M349 196 C341 214 339 238 343 260 C347 250 347 236 348 222 C348 212 348 204 349 196 Z" fill="#5A3A2C" />
+                          <path d="M410 206 C418 232 418 262 412 288 C406 280 404 260 405 236 Z" fill="#5A3A2C" />
+                          <path d="M366 176 C380 172 394 174 404 182" fill="none" stroke="#7A5444" stroke-width="2.6" stroke-linecap="round" />
+                          <path d="M350 172 C372 162 398 162 418 170 L416 188 C396 180 372 180 352 188 Z" fill="#2B2F42" stroke="#0D0F16" stroke-width="1.4" stroke-linejoin="round" />
+                          <path d="M406 168 L418 170 L416 188 L404 184 Z" fill="#56607F" opacity=".5" />
+                          <path d="M318 162 L384 140 L450 160 L384 180 Z" fill="#2B2F42" stroke="#0D0F16" stroke-width="1.6" stroke-linejoin="round" />
+                          <path d="M384 140 L450 160 L384 180 Z" fill="#56607F" opacity=".45" />
+                          <path d="M318 162 L384 180 L384 186 L318 168 Z" fill="#1A1D29" stroke="#0D0F16" stroke-width="1.2" stroke-linejoin="round" />
+                          <path d="M384 180 L450 160 L450 166 L384 186 Z" fill="#2B2F42" stroke="#0D0F16" stroke-width="1.2" stroke-linejoin="round" />
+                          <ellipse cx="384" cy="160" rx="5" ry="3" fill="#E8B52E" stroke="#9C700E" stroke-width=".8" />
+                          <path d="M384 160 Q414 158 446 164" fill="none" stroke="#E8B52E" stroke-width="2.2" stroke-linecap="round" />
+                          <g class="pair-tassel" style="transform-origin:446px 164px">
+                            <path d="M446 164 L446 192" stroke="#E8B52E" stroke-width="2.2" stroke-linecap="round" />
+                            <rect x="441" y="190" width="10" height="13" rx="3.5" fill="#E8B52E" stroke="#9C700E" stroke-width=".8" />
+                            <path d="M441 202 L451 202 L456 242 Q452 246 446 243 Q440 246 436 242 Z" fill="#E8B52E" stroke="#9C700E" stroke-width=".8" stroke-linejoin="round" />
+                            <path d="M444 206 L440 240 M448 206 L450 242" stroke="#9C700E" stroke-width=".8" />
+                          </g>
+                        </g>
+                      </g>
+                      <g transform="rotate(-8 370 452)">
+                        <rect x="322" y="442" width="98" height="22" rx="11" fill="#F6EED8" stroke="#B9A983" stroke-width="1.3" />
+                        <rect x="322" y="442" width="98" height="8" rx="4" fill="#FFFBF0" />
+                        <ellipse cx="420" cy="453" rx="5" ry="11" fill="#E8DCBE" stroke="#B9A983" stroke-width="1.2" />
+                        <path d="M364 442 L364 464 M374 442 L374 464" stroke="#C0283B" stroke-width="5" />
+                        <path d="M369 464 L362 484 M369 464 L376 484" stroke="#C0283B" stroke-width="3" stroke-linecap="round" />
+                      </g>
+                      <path d="M326 452 C324 440 336 434 346 438 C354 442 356 454 350 462 C342 468 330 464 326 452 Z" fill="#F6D9C4" stroke="#B98068" stroke-width="1.3" stroke-linejoin="round" />
+                      <path d="M384 444 C384 432 396 428 404 434 C410 440 408 452 400 456 C392 458 384 454 384 444 Z" fill="#F6D9C4" stroke="#B98068" stroke-width="1.3" stroke-linejoin="round" />
+                      <path d="M332 444 C338 444 344 448 346 454 M390 436 C396 436 402 440 404 446" fill="none" stroke="#B98068" stroke-width="1" stroke-linecap="round" />
+                    </g>
+                  </g>
+                  <!-- Depth Layer +0.6: floating petals inside the arch -->
+                  <g class="about-depth" data-depth="0.6">
+                    <g transform="translate(140 140) rotate(30)"><path class="drift" style="--i:0" d="M0 0 C-5 -4 -6 -10 -4 -14 Q-1.5 -15 0 -12 Q1.5 -15 4 -14 C6 -10 5 -4 0 0 Z" fill="#EE6A3F" /></g>
+                    <g transform="translate(500 120) rotate(-20)"><path class="drift" style="--i:1" d="M0 0 C-5 -4 -6 -10 -4 -14 Q-1.5 -15 0 -12 Q1.5 -15 4 -14 C6 -10 5 -4 0 0 Z" fill="#EE6A3F" /></g>
+                    <g transform="translate(330 100) rotate(60)"><path class="drift" style="--i:2" d="M0 0 C-5 -4 -6 -10 -4 -14 Q-1.5 -15 0 -12 Q1.5 -15 4 -14 C6 -10 5 -4 0 0 Z" fill="#EE6A3F" /></g>
+                    <g transform="translate(120 330) rotate(-50)"><path class="drift" style="--i:3" d="M0 0 C-5 -4 -6 -10 -4 -14 Q-1.5 -15 0 -12 Q1.5 -15 4 -14 C6 -10 5 -4 0 0 Z" fill="#EE6A3F" /></g>
+                    <g transform="translate(520 300) rotate(10)"><path class="drift" style="--i:4" d="M0 0 C-5 -4 -6 -10 -4 -14 Q-1.5 -15 0 -12 Q1.5 -15 4 -14 C6 -10 5 -4 0 0 Z" fill="#EE6A3F" /></g>
+                  </g>
+                </g>
+                <!-- Depth Layer 0: Stone arch bezel -->
+                <path d="M84 580 L84 280 A236 236 0 0 1 556 280 L556 580 Z" fill="none" stroke="#D9C6B6" stroke-width="9" stroke-linejoin="round" />
+                <path d="M90 576 L90 280 A230 230 0 0 1 550 280 L550 576" fill="none" stroke="#FFFDF9" stroke-width="2" opacity=".8" />
+                <!-- Depth Layer +1.05: Foreground kapok branch overhanging in front of the arch -->
+                <g class="about__branch about-depth" data-depth="1.05">
+                  <path d="M650 40 C590 54 540 70 500 92 C470 108 450 124 430 140 L436 146 C458 130 478 116 506 102 C546 82 594 66 654 54 Z" fill="#6E5452" />
+                  <path d="M560 64 C552 44 540 32 524 24 L528 18 C546 28 560 42 568 60 Z" fill="#6E5452" />
+                  <g class="bloom" style="--i:0"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(440 138) rotate(10) scale(0.55)" /></g>
+                  <g class="bloom" style="--i:1"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(476 116) rotate(40) scale(0.65)" /></g>
+                  <g class="bloom" style="--i:2"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(508 98) rotate(-20) scale(0.5)" /></g>
+                  <g class="bloom" style="--i:3"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(540 80) rotate(15) scale(0.6)" /></g>
+                  <g class="bloom" style="--i:4"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(574 70) rotate(50) scale(0.55)" /></g>
+                  <g class="bloom" style="--i:5"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(612 58) rotate(-10) scale(0.6)" /></g>
+                  <g class="bloom" style="--i:6"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(526 26) rotate(20) scale(0.5)" /></g>
+                  <g class="bloom" style="--i:7"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(554 50) rotate(0) scale(0.45)" /></g>
+                  <g class="bloom" style="--i:8"><use href="#k-blossom" width="72" height="72" x="-36" y="-36" transform="translate(494 126) rotate(70) scale(0.45)" /></g>
+                </g>
+              </svg>
+            </figure>
+          </div>
+          <div class="about__copy">
+            <header class="ed-head ed-head--left" data-reveal>
+              <p class="ed-index"><b>01</b><i></i><span>ABOUT BLACK A BEAUTY</span></p>
+              <p class="ed-head__en" lang="en">About Us</p>
+              <h2 id="about-title">關於我們</h2>
+            </header>
+            <ul class="about__list">
+              <li data-reveal style="--i:0"><span><span class="nw">歡迎機關、團體</span><span class="nw">「訂購、出租」</span></span></li>
+              <li data-reveal style="--i:1"><span><span class="nw">本公司專營</span><span class="nw">國內外各大學之</span><span class="nw">博士、碩士、學士服</span></span></li>
+              <li data-reveal style="--i:2"><span><span class="nw">接受「個人訂製」</span><span class="nw">國內外博士服、碩士服</span></span></li>
+            </ul>
+            <div class="about__bridge" data-reveal style="--i:3">
+              <a class="btn btn--ghost" href="#gallery">前往 2.5D 學位服展廳 ↓</a>
+              <span class="about__hint">移動滑鼠可在紅磚拱門裡看見 2.5D 景深層次</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stage 02: 學位服展廳 (Second Three.js 2.5D Showcase per plan §4.2) -->
+      <section class="gallery" id="gallery" aria-labelledby="gallery-title">
+        <p class="gallery__watermark" id="gallery-watermark" aria-hidden="true">學士・碩士・博士</p>
+        <div class="container gallery__layout">
+          <div class="gallery__stage" id="gallery-stage">
+            <span class="gallery__stage-tag" id="gallery-badge">2.5D 人台展示｜正面</span>
+            <canvas id="gallery-scene" aria-label="2.5D 學位服展廳：依序檢視學士、碩士、博士袍與換色、正背面切換"></canvas>
+            <div class="gallery__sheen" id="gallery-sheen" aria-hidden="true"></div>
+            <button type="button" class="gallery__flip-btn" id="gallery-flip">
+              <span id="gallery-flip-label">切換背面披肩</span> ↻
+            </button>
+          </div>
+          <div class="gallery__panel">
+            <header class="ed-head ed-head--left" data-reveal>
+              <p class="ed-index"><b>02</b><i></i><span>2.5D SHOWROOM</span></p>
+              <p class="ed-head__en" lang="en">Academic Regalia</p>
+              <h2 id="gallery-title" data-copy="new">學位服展廳</h2>
+            </header>
+            <div class="gallery__tabs" role="tablist" aria-label="選擇學位服款式">
+              <button class="gallery__tab" type="button" role="tab" data-unit="bachelor" aria-selected="true">學士服</button>
+              <button class="gallery__tab" type="button" role="tab" data-unit="master" aria-selected="false">碩士服</button>
+              <button class="gallery__tab" type="button" role="tab" data-unit="doctor" aria-selected="false">博士服</button>
+            </div>
+            <h3 class="gallery__title" id="gallery-unit-title">學士服（領巾款）</h3>
+            <p class="gallery__desc" id="gallery-unit-desc">黑色外框 V 形領巾搭配緞面嵌條，袍身管狀褶自肩部自然垂墜，人台立於和紙柔光中。</p>
+            <p class="gallery__swatches-label">實體照片原色切換（僅列原照實有配色）：</p>
+            <div class="gallery__swatches" id="gallery-swatches"></div>
+            <p class="gallery__note">依計劃書 §4.2：3D 僅用於首頁與展廳，不作 360° 旋轉，改以正／背面手繪插畫切換並輔以動態擺動與滑鼠微傾視差。</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stage 03: 其他服務 + 八枚朱印卷軸 (Editorial layout upgrade per plan §4.3) -->
+      <section class="service" id="service" aria-labelledby="service-title">
+        <div class="container">
+          <header class="ed-head ed-head--center" data-reveal>
+            <p class="ed-index"><b>03</b><i></i><span>OUR SERVICES</span></p>
+            <p class="ed-head__en" lang="en">Our Services</p>
+            <h2 id="service-title">其他服務</h2>
+          </header>
+          <p class="service__lead" data-reveal>本公司承製國內各大學之說明：<b>【附設洗衣、訂製、出租】</b></p>
+          <ul class="service__cards">
+            <li class="spot" data-reveal style="--i:0">
+              <svg viewBox="0 0 320 260" aria-hidden="true">
+                <circle cx="160" cy="140" r="104" fill="#E3F2FB" />
+                <circle cx="222" cy="92" r="46" fill="#E3F2FB" />
+                <path d="M160 34 C160 24 170 22 172 30 C174 36 166 40 160 42 L160 50" fill="none" stroke="#8C92A0" stroke-width="3.5" stroke-linecap="round" />
+                <path d="M160 50 L98 80 L222 80 Z" fill="none" stroke="#8C92A0" stroke-width="3.5" stroke-linejoin="round" />
+                <g filter="url(#k-grain)"><use class="cw-black trim-silver" href="#k-bachelor" x="96" y="26" width="128" height="230" /></g>
+                <circle cx="70" cy="98" r="16" fill="#FFFFFF" fill-opacity=".75" stroke="#8FC7E8" stroke-width="1.6" />
+                <circle cx="252" cy="152" r="14" fill="#FFFFFF" fill-opacity=".75" stroke="#8FC7E8" stroke-width="1.6" />
+                <circle cx="270" cy="104" r="9" fill="#FFFFFF" fill-opacity=".75" stroke="#8FC7E8" stroke-width="1.6" />
+                <path d="M56 54 Q58.8 61.2 66 64 Q58.8 66.8 56 74 Q53.2 66.8 46 64 Q53.2 61.2 56 54 Z" fill="#F7D774" />
+              </svg>
+              <h3>洗衣</h3>
+            </li>
+            <li class="spot" data-reveal style="--i:1">
+              <svg viewBox="0 0 320 260" aria-hidden="true">
+                <circle cx="160" cy="140" r="104" fill="#FDEEE3" />
+                <circle cx="96" cy="88" r="44" fill="#FDEEE3" />
+                <g filter="url(#k-grain-light)">
+                  <path d="M66 156 C108 124 170 132 216 114 L254 182 C208 202 150 190 102 220 Z" fill="#E0AE2A" stroke="#7A560A" stroke-width="1.6" stroke-linejoin="round" />
+                  <path d="M48 200 C86 236 170 242 216 210 C248 188 272 152 262 118" fill="none" stroke="#F2C230" stroke-width="15" stroke-linecap="round" />
+                  <path d="M48 200 C86 236 170 242 216 210 C248 188 272 152 262 118" fill="none" stroke="#6E4B08" stroke-width="6" stroke-dasharray="1.3 6.5" />
+                  <g transform="translate(92 92)">
+                    <path d="M-6 -20 L-9 -42 M4 -18 L12 -40" stroke="#8C92A0" stroke-width="1.8" stroke-linecap="round" />
+                    <circle cx="-9" cy="-44" r="4.2" fill="#2A69CE" /><circle cx="12" cy="-42" r="4.2" fill="#F2C230" />
+                    <circle r="28" fill="#E25B4B" stroke="#8F2E25" stroke-width="1.6" />
+                  </g>
+                  <g transform="translate(206 74) rotate(-28)">
+                    <path d="M0 0 L86 -6 L86 -1 L4 8 Z" fill="#C9CED6" stroke="#7D8492" stroke-width="1.4" />
+                    <path d="M0 0 L86 8 L84 13 L2 8 Z" fill="#E4E7EC" stroke="#7D8492" stroke-width="1.4" />
+                    <ellipse cx="-22" cy="-12" rx="17" ry="11" fill="none" stroke="#2A2D3B" stroke-width="7" transform="rotate(-20 -22 -12)" />
+                    <ellipse cx="-24" cy="18" rx="14" ry="10" fill="none" stroke="#2A2D3B" stroke-width="7" transform="rotate(16 -24 18)" />
+                  </g>
+                </g>
+              </svg>
+              <h3>訂製</h3>
+            </li>
+            <li class="spot" data-reveal style="--i:2">
+              <svg viewBox="0 0 320 260" aria-hidden="true">
+                <circle cx="160" cy="140" r="104" fill="#F1ECFA" />
+                <circle cx="226" cy="190" r="46" fill="#F1ECFA" />
+                <g stroke="#8C92A0" stroke-linecap="round" fill="none">
+                  <path d="M58 42 L58 226 M262 42 L262 226" stroke-width="6" />
+                  <path d="M52 42 L268 42" stroke-width="7" />
+                </g>
+                <g filter="url(#k-grain)">
+                  <use class="cw-black trim-silver" href="#k-bachelor" x="54" y="36" width="84" height="151" />
+                  <use class="cw-black trim-blue" href="#k-bachelor" x="98" y="36" width="84" height="151" />
+                  <use class="cw-black trim-orange" href="#k-bachelor" x="142" y="36" width="84" height="151" />
+                  <use class="cw-black trim-purple" href="#k-bachelor" x="186" y="36" width="84" height="151" />
+                </g>
+              </svg>
+              <h3>出租</h3>
+            </li>
+          </ul>
+          <div class="seals-scroll" data-reveal>
+            <p class="seals-scroll__caption">EIGHT PROMISES ON WASHI SCROLL</p>
+            <ol class="seals" data-reveal>
+              <li><span class="seal" style="--i:0;--r:-3deg">直營工廠</span></li>
+              <li><span class="seal seal--zhu" style="--i:1;--r:2deg">一貫作業</span></li>
+              <li><span class="seal" style="--i:2;--r:-1deg">專人設計</span></li>
+              <li><span class="seal seal--zhu" style="--i:3;--r:3deg">經驗豐富</span></li>
+              <li><span class="seal seal--zhu" style="--i:4;--r:-2deg">物美價廉</span></li>
+              <li><span class="seal" style="--i:5;--r:2deg">品質保證</span></li>
+              <li><span class="seal seal--zhu" style="--i:6;--r:-3deg">服務週到</span></li>
+              <li><span class="seal" style="--i:7;--r:1deg">專程送達</span></li>
+            </ol>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stage 04: 承製院校 -->
+      <section class="schools" id="schools" aria-labelledby="schools-title">
+        <div class="container schools__layout">
+          <div data-reveal>
+            <p class="ed-index"><b>04</b><i></i><span>UNIVERSITIES</span></p>
+            <p class="schools__lead">曾承製全國各大學院校有：</p>
+            <h2 class="schools__count" id="schools-title" data-copy="new"><span id="schools-num">75</span><span class="schools__unit">所</span></h2>
+            <div class="schools__search">
+              <label class="sr-only" for="school-q">搜尋校名</label>
+              <svg class="icon" aria-hidden="true"><use href="#i-search" /></svg>
+              <input id="school-q" type="search" placeholder="搜尋校名，例如：成大、高師大" autocomplete="off">
+              <p class="schools__status" id="schools-status" aria-live="polite"></p>
+            </div>
+          </div>
+          <div data-reveal style="--i:1">
+            <ul class="schools__wall" id="schools-wall">
+              <li>清華大學</li><li>台北大學</li><li>輔仁大學</li><li>中正大學</li><li>中山大學</li><li>中原大學</li><li>成功大學</li><li>東吳大學</li><li>高雄大學</li><li>台灣海大</li><li>元智大學</li><li>文化學院</li><li>政治大學</li><li>台灣師大</li><li>高雄師大</li><li>新竹師大</li><li>崑山大學</li><li>輔英大學</li><li>虎尾學院</li><li>康寧學院</li><li>台北師大</li><li>台北商院</li><li>高雄應大</li><li>高雄科大</li><li>長榮大學</li><li>嘉南大學</li><li>南華大學</li><li>真理大學</li><li>屏東師大</li><li>屏東商院</li><li>屏東科大</li><li>北台學院</li><li>大仁大學</li><li>高醫大學</li><li>聖約翰大學</li><li>美和學院</li><li>中華大學</li><li>花蓮師大</li><li>東華大學</li><li>台中學院</li><li>環球學院</li><li>聯合大學</li><li>永達學院</li><li>立德大學</li><li>致遠學院</li><li>興國學院</li><li>德明學院</li><li>德霖學院</li><li>東南大學</li><li>實踐大學</li><li>景文學院</li><li>藝術大學</li><li>中洲學院</li><li>空中大學</li><li>東方學院</li><li>亞東學院</li><li>雲林科大</li><li>大葉大學</li><li>台北科大</li><li>樹德科大</li><li>南台大學</li><li>建國大學</li><li>醒吾大學</li><li>中台學院</li><li>中華醫院</li><li>南亞學院</li><li>南開學院</li><li>高苑大學</li><li>高雄海大</li><li>台灣體院</li><li>慈濟大學</li><li>澎湖海院</li><li>餐旅學院</li><li>大漢學院</li><li>高鳳大學</li>
+            </ul>
+            <p class="schools__more">等 75 所大學正在增加中......</p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stage 05: 品名規格 & 相關產品 -->
+      <section class="spec-products" id="products" aria-labelledby="spec-title">
+        <div class="container">
+          <header class="ed-head ed-head--center" data-reveal>
+            <p class="ed-index"><b>05</b><i></i><span>SPECIFICATION &amp; MORE</span></p>
+            <p class="ed-head__en" lang="en">Specification</p>
+            <h2 id="spec-title" data-copy="new">品名規格與相關產品</h2>
+          </header>
+          <div class="spec__card" data-reveal>
+            <table class="spec__table">
+              <thead>
+                <tr><th scope="col">品名</th><th scope="col">規格</th><th scope="col">數量</th><th scope="col">價格</th><th scope="col">備考</th></tr>
+              </thead>
+              <tbody>
+                <tr><th scope="row">1. 博士服</th><td>含披、帽</td><td>1 套</td><td><a href="tel:073493832">來電詢問</a></td><td></td></tr>
+                <tr><th scope="row">2. 碩士服</th><td>含披、帽</td><td>1 套</td><td><a href="tel:073493832">來電詢問</a></td><td>提供出租</td></tr>
+                <tr><th scope="row">3. 學士服</th><td>中西式</td><td>1 套</td><td><a href="tel:073493832">來電詢問</a></td><td></td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="products__layout">
+            <div data-reveal>
+              <svg class="products__svg" viewBox="0 0 1080 600" role="img" aria-label="相關產品插畫：粉紅色刺繡鳳仙裝、桃紅色舞蹈服、淺藍色立領盤扣短袖上衣">
+                <g filter="url(#k-soft)" fill="#3A2A3A" opacity=".14">
+                  <ellipse cx="180" cy="578" rx="120" ry="12" />
+                  <ellipse cx="540" cy="578" rx="110" ry="12" />
+                  <ellipse cx="900" cy="540" rx="110" ry="12" />
+                </g>
+                <g filter="url(#k-grain-light)">
+                  <use href="#k-fengxian" x="0" y="20" width="360" height="560" />
+                  <use href="#k-dance" x="360" y="20" width="360" height="560" />
+                  <use href="#k-tangzhuang" x="720" y="20" width="360" height="520" />
+                </g>
+              </svg>
+            </div>
+            <div data-reveal style="--i:1">
+              <p class="products__text">相關產品有<span class="nw"><span class="tag">運動服</span>、</span><span class="nw"><span class="tag">團體服</span>、</span><span class="nw"><span class="tag">學生制服</span>、</span><span class="nw"><span class="tag">夾克</span>、</span><span class="nw"><span class="tag">襯衫</span>、</span><span class="nw"><span class="tag">合唱服</span>、</span><span class="nw"><span class="tag">舞蹈服</span>、</span><span class="nw"><span class="tag">帽子</span>、</span><span class="nw"><span class="tag">休閒服</span>、</span><span class="nw"><span class="tag">鳳仙裝</span>、</span><span class="nw"><span class="tag">廣告背心</span>、</span><span class="nw"><span class="tag">餐飲廚服</span>、</span><span class="nw"><span class="tag">醫生袍</span>、</span><span class="nw"><span class="tag">護士服</span>、</span><span class="nw"><span class="tag">祭典禮服</span>...等。</span><span class="nw">歡迎來電詢問～！</span></p>
+              <div style="margin-top:22px">
+                <a class="btn btn--primary" href="tel:073493832"><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg>撥打 (07)3493832</a>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Stage 06: 聯絡我們 & 頁尾 -->
+      <section class="contact" id="contact" aria-labelledby="contact-title">
+        <div class="container">
+          <header class="ed-head ed-head--center" data-reveal>
+            <p class="ed-index"><b>06</b><i></i><span>CONTACT</span></p>
+            <p class="ed-head__en" lang="en">Contact</p>
+            <h2 id="contact-title">聯絡我們</h2>
+          </header>
+          <div class="contact__card" data-reveal>
+            <p class="contact__company">黑美人服飾開發有限公司<span lang="en">Black A Beauty</span></p>
+            <dl class="contact__list">
+              <div><dt><svg class="icon" aria-hidden="true"><use href="#i-phone" /></svg>電話</dt><dd><a href="tel:073493832">(07)3493832</a>、<a href="tel:073597082">3597082</a>、<a href="tel:073597036">3597036</a></dd></div>
+              <div><dt><svg class="icon" aria-hidden="true"><use href="#i-fax" /></svg>傳真</dt><dd>(07)3104329、3426879</dd></div>
+              <div><dt><svg class="icon" aria-hidden="true"><use href="#i-mobile" /></svg>行動</dt><dd><a href="tel:0933907593">0933-907-593</a></dd></div>
+              <div><dt><svg class="icon" aria-hidden="true"><use href="#i-mail" /></svg>信箱</dt><dd><a href="mailto:yes_blackabeauty_yes@yahoo.com.tw">yes_blackabeauty_yes@<wbr>yahoo.com.tw</a></dd></div>
+              <div><dt><svg class="icon" aria-hidden="true"><use href="#i-pin" /></svg>地址</dt><dd><a href="https://www.google.com/maps/dir/?api=1&amp;destination=%E9%AB%98%E9%9B%84%E5%B8%82%E4%B8%89%E6%B0%91%E5%8D%80%E9%BC%8E%E8%B2%B4%E8%B7%AF62%E5%B7%B714%E8%99%9F" target="_blank" rel="noopener">高雄市三民區鼎貴路62巷14號</a></dd></div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <footer class="site-footer">
+        <div class="container">
+          <p class="site-footer__name">黑美人服飾開發有限公司<span lang="en">Black A Beauty</span></p>
+          <p>地址：高雄市三民區鼎貴路62巷14號</p>
+          <p><span class="nw">電話：(07)3493832、3597082、3597036</span>　<span class="nw">傳真：(07)3104329、3426879</span>　<span class="nw">行動：0933-907-593</span></p>
+          <p class="site-footer__copy">© 2026 黑美人服飾開發有限公司</p>
+        </div>
+      </footer>
     </div>
-    <span class="hud__fps" id="fps"></span>
+  </main>
+
+  <!-- Near-depth kapok petals floating in front of the paper sections -->
+  <canvas class="petals-front" id="petals-front" aria-hidden="true"></canvas>
+
+  <!-- Prototype Inspector & Guided Transition Controller -->
+  <aside class="hud" id="hud" aria-label="進階版原型導覽">
+    <div class="hud__head">
+      <h2>2.5D 全站原型（進階版）</h2>
+      <div class="hud__meta">
+        <span class="hud__fps" id="fps">-- fps</span>
+        <button type="button" class="hud__collapse" id="b-collapse">收合</button>
+      </div>
+    </div>
+    <div class="hud__body">
+      <div class="hud__stage">
+        <span>目前畫面：<strong id="hud-chapter">00 Hero 2.5D 草坪場景</strong></span>
+        <span id="hud-pct">0%</span>
+      </div>
+      <div class="hud__bar"><i id="hud-bar"></i></div>
+      <div class="hud__row">
+        <button type="button" class="hud__btn hud__btn--accent" id="b-demo">▶ 演示：從主頁捲動到「關於我們」</button>
+      </div>
+      <div class="hud__row">
+        <button type="button" class="hud__btn hud__btn--ghost" data-jump="#top">首頁</button>
+        <button type="button" class="hud__btn hud__btn--ghost" data-jump="#about">01 關於</button>
+        <button type="button" class="hud__btn hud__btn--ghost" data-jump="#gallery">02 展廳</button>
+        <button type="button" class="hud__btn hud__btn--ghost" data-jump="#service">03 服務</button>
+        <button type="button" class="hud__btn hud__btn--ghost" data-jump="#contact">06 聯絡</button>
+      </div>
+      <div class="hud__row">
+        <label><input type="checkbox" id="t-sway" checked>布料擺動</label>
+        <label><input type="checkbox" id="t-grass" checked>草坪</label>
+        <label><input type="checkbox" id="t-dof" checked>景深模糊</label>
+        <label><input type="checkbox" id="t-petals" checked>全站花瓣</label>
+        <label><input type="checkbox" id="t-smooth" checked>慣性捲動</label>
+      </div>
+      <div class="hud__row">
+        <button type="button" class="hud__btn" id="b-gust">起風</button>
+        <button type="button" class="hud__btn" id="b-toss">再拋一次方帽</button>
+      </div>
+    </div>
   </aside>
-
-  <div class="compare" id="compare" hidden>
-    <div class="compare__vector" id="compare-vector"></div>
-    <span class="compare__tag" id="tag-vector">向量原圖（網站現在的畫法）</span>
-    <span class="compare__tag" id="tag-webgl">three.js 貼圖</span>
-  </div>
-
-  <div class="scroll-space"></div>
 
   <script src="vendor/three.min.js"></script>
   <script src="art.js"></script>
